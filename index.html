@@ -1,0 +1,2653 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Accra Life — The Ghanaian Life & Hustle Simulator</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .ghana-gradient {
+      background: linear-gradient(90deg, #CE1126 0%, #FCD116 50%, #006B3F 100%);
+    }
+    .meter-bar { transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    canvas { touch-action: none; user-select: none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden selection:bg-amber-400 selection:text-slate-950">
+
+  <!-- Top Ghana Flag Accent Bar -->
+  <div class="h-1.5 w-full ghana-gradient shrink-0"></div>
+
+  <!-- Top HUD Header -->
+  <header class="bg-slate-900/95 border-b border-slate-800 px-3 py-2.5 sticky top-0 z-30 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <!-- Brand + Player Identity -->
+      <div class="flex items-center gap-2.5">
+        <button id="btnOpenCharModal" class="relative group flex items-center gap-2.5 bg-slate-800/90 hover:bg-slate-800 border border-slate-700/80 rounded-xl px-2.5 py-1.5 transition" title="Customize Character">
+          <div id="hudAvatarBadge" class="w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold shadow-inner border border-amber-400/40 bg-emerald-600">
+            😎
+          </div>
+          <div class="text-left">
+            <div class="flex items-center gap-1.5">
+              <span id="hudPlayerName" class="font-display font-bold text-sm text-white tracking-tight">Kwesi Mensah</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30" id="hudTitleBadge">Chale Hustler 🔥</span>
+            </div>
+            <div class="text-[11px] text-slate-400 flex items-center gap-1.5">
+              <span id="hudJobTitle">NSS Tech Intern</span>
+              <span>•</span>
+              <span id="hudLocationName" class="text-emerald-400 font-medium">Home Residence</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- ECG Power & Water Status Pill -->
+        <div class="hidden sm:flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 px-2.5 py-1.5 rounded-xl text-xs">
+          <span id="ecgStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="ecgStatusText" class="font-medium text-slate-300">ECG: Lights On</span>
+        </div>
+      </div>
+
+      <!-- Center Time, Day, Rent Countdown & Cash -->
+      <div class="flex items-center flex-wrap gap-2">
+        <!-- In-Game Clock & Day -->
+        <div class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 flex items-center gap-2">
+          <span id="hudDayIcon" class="text-base">☀️</span>
+          <div>
+            <div id="hudDayTime" class="font-display font-bold text-xs sm:text-sm text-white leading-tight">Mon (Day 1), 08:00 AM</div>
+            <div id="hudRentCountdown" class="text-[10px] text-amber-400 font-medium">Rent: GH₵ 350 due Sat (5d)</div>
+          </div>
+        </div>
+
+        <!-- Speed Controls -->
+        <div class="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1 gap-0.5">
+          <button id="btnSpeedPause" class="px-2 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition" title="Pause Simulation">⏸</button>
+          <button id="btnSpeed1x" class="px-2 py-1 rounded-lg text-xs font-semibold bg-amber-500 text-slate-950 transition" title="Normal Speed">1x</button>
+          <button id="btnSpeed3x" class="px-2 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition" title="Fast Forward">3x</button>
+        </div>
+
+        <!-- MoMo & Cash Wallet -->
+        <div class="bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-emerald-500/20 border border-amber-500/40 rounded-xl px-3 py-1.5 flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center font-display font-extrabold text-xs shadow">₵</div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider text-amber-300/90 font-semibold leading-none">MoMo Wallet</div>
+            <div id="hudCash" class="font-display font-bold text-sm sm:text-base text-white leading-tight">GH₵ 650</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Radio & Utility Controls -->
+      <div class="flex items-center gap-1.5">
+        <!-- Accra Radio Controller -->
+        <div class="flex items-center bg-slate-950 border border-slate-800 rounded-xl px-2 py-1 gap-1.5">
+          <button id="btnRadioToggle" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white flex items-center justify-center text-xs transition" title="Toggle Accra Radio & Sound">
+            🔇
+          </button>
+          <select id="selectRadioStation" class="bg-transparent text-xs font-medium text-slate-300 focus:outline-none cursor-pointer pr-1 max-w-[125px] sm:max-w-[155px] truncate" aria-label="Select Accra Radio Station">
+            <option value="0" class="bg-slate-900">📻 YFM 107.9 Afrobeats</option>
+            <option value="1" class="bg-slate-900">📻 Citi 97.3 Highlife</option>
+            <option value="2" class="bg-slate-900">📻 Joy 99.7 Drive Vibes</option>
+            <option value="3" class="bg-slate-900">📻 Asaase 99.5 Asakaa Drill</option>
+            <option value="4" class="bg-slate-900">📻 Hitz 103.9 Hiplife</option>
+            <option value="5" class="bg-slate-900">📻 Peace 104.3 Twi Groove</option>
+            <option value="6" class="bg-slate-900">📻 Obonu 96.5 Ga Kpanlogo</option>
+          </select>
+        </div>
+
+        <button id="btnHowToPlay" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition">
+          Guide
+        </button>
+        <button id="btnResetGame" class="px-2.5 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 text-xs font-semibold border border-rose-800/60 transition" title="Start Fresh Life">
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Six Sims-Style Survival Meters Bar -->
+    <div class="max-w-7xl mx-auto mt-2.5 pt-2 border-t border-slate-800/80 grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <!-- Hunger -->
+      <div class="bg-slate-950/90 border border-slate-800/90 rounded-lg px-2.5 py-1.5">
+        <div class="flex items-center justify-between text-[11px] mb-1">
+          <span class="font-semibold text-slate-300 flex items-center gap-1">🍲 Hunger</span>
+          <span id="valHunger" class="font-mono font-bold text-emerald-400">85%</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="barHunger" class="meter-bar h-full bg-emerald-500 rounded-full" style="width: 85%"></div>
+        </div>
+      </div>
+      <!-- Energy -->
+      <div class="bg-slate-950/90 border border-slate-800/90 rounded-lg px-2.5 py-1.5">
+        <div class="flex items-center justify-between text-[11px] mb-1">
+          <span class="font-semibold text-slate-300 flex items-center gap-1">⚡ Energy</span>
+          <span id="valEnergy" class="font-mono font-bold text-emerald-400">80%</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="barEnergy" class="meter-bar h-full bg-emerald-500 rounded-full" style="width: 80%"></div>
+        </div>
+      </div>
+      <!-- Fun -->
+      <div class="bg-slate-950/90 border border-slate-800/90 rounded-lg px-2.5 py-1.5">
+        <div class="flex items-center justify-between text-[11px] mb-1">
+          <span class="font-semibold text-slate-300 flex items-center gap-1">🎉 Fun</span>
+          <span id="valFun" class="font-mono font-bold text-emerald-400">75%</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="barFun" class="meter-bar h-full bg-emerald-500 rounded-full" style="width: 75%"></div>
+        </div>
+      </div>
+      <!-- Social -->
+      <div class="bg-slate-950/90 border border-slate-800/90 rounded-lg px-2.5 py-1.5">
+        <div class="flex items-center justify-between text-[11px] mb-1">
+          <span class="font-semibold text-slate-300 flex items-center gap-1">🗣️ Social</span>
+          <span id="valSocial" class="font-mono font-bold text-emerald-400">70%</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="barSocial" class="meter-bar h-full bg-emerald-500 rounded-full" style="width: 70%"></div>
+        </div>
+      </div>
+      <!-- Hygiene -->
+      <div class="bg-slate-950/90 border border-slate-800/90 rounded-lg px-2.5 py-1.5">
+        <div class="flex items-center justify-between text-[11px] mb-1">
+          <span class="font-semibold text-slate-300 flex items-center gap-1">🚿 Hygiene</span>
+          <span id="valHygiene" class="font-mono font-bold text-emerald-400">90%</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="barHygiene" class="meter-bar h-full bg-emerald-500 rounded-full" style="width: 90%"></div>
+        </div>
+      </div>
+      <!-- Bladder -->
+      <div class="bg-slate-950/90 border border-slate-800/90 rounded-lg px-2.5 py-1.5">
+        <div class="flex items-center justify-between text-[11px] mb-1">
+          <span class="font-semibold text-slate-300 flex items-center gap-1">🚽 Bladder</span>
+          <span id="valBladder" class="font-mono font-bold text-emerald-400">88%</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="barBladder" class="meter-bar h-full bg-emerald-500 rounded-full" style="width: 88%"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 py-3 grid grid-cols-1 lg:grid-cols-12 gap-3">
+
+    <!-- Left / Center Column: Interactive Accra City Canvas + Location Actions (7 cols) -->
+    <section class="lg:col-span-7 flex flex-col gap-3">
+      <!-- Interactive World Canvas Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex flex-col">
+        <!-- Map Subheader Bar -->
+        <div class="px-3.5 py-2 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Greater Accra Map</span>
+            <span id="mapTransportStatus" class="text-xs text-slate-400">Mode: 🚐 Trotro (GH₵ 8/trip)</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
+            <span>Move: <strong class="text-slate-200">WASD / Arrows</strong> or <strong class="text-amber-300">Tap Landmark</strong></span>
+          </div>
+        </div>
+
+        <!-- Canvas Wrapper -->
+        <div id="canvasContainer" class="relative w-full h-[320px] sm:h-[380px] bg-slate-950 overflow-hidden">
+          <canvas id="accraCanvas" class="w-full h-full block cursor-pointer"></canvas>
+
+          <!-- Floating Action Progress Overlay -->
+          <div id="actionProgressOverlay" class="hidden absolute top-3 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-amber-500/50 rounded-xl px-4 py-2 shadow-2xl flex items-center gap-3 z-20 min-w-[240px]">
+            <div class="w-6 h-6 rounded-full border-2 border-amber-400 border-t-transparent animate-spin shrink-0"></div>
+            <div class="flex-1">
+              <div id="actionProgressLabel" class="text-xs font-bold text-white">Eating Waakye...</div>
+              <div class="w-full h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                <div id="actionProgressBar" class="h-full bg-amber-400 transition-all duration-100" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- On-Screen Touch D-Pad (Bottom Left of Canvas) -->
+          <div class="absolute bottom-3 left-3 flex flex-col items-center gap-1 z-10 opacity-85 hover:opacity-100">
+            <button id="dpadUp" class="w-8 h-8 rounded-lg bg-slate-900/90 border border-slate-700 text-white flex items-center justify-center active:bg-amber-500 active:text-slate-950 text-xs font-bold shadow" aria-label="Move North">▲</button>
+            <div class="flex items-center gap-1">
+              <button id="dpadLeft" class="w-8 h-8 rounded-lg bg-slate-900/90 border border-slate-700 text-white flex items-center justify-center active:bg-amber-500 active:text-slate-950 text-xs font-bold shadow" aria-label="Move West">◀</button>
+              <button id="dpadCenter" class="w-8 h-8 rounded-lg bg-amber-500/90 border border-amber-400 text-slate-950 flex items-center justify-center text-[10px] font-extrabold shadow" title="Interact with Nearest Spot">GO</button>
+              <button id="dpadRight" class="w-8 h-8 rounded-lg bg-slate-900/90 border border-slate-700 text-white flex items-center justify-center active:bg-amber-500 active:text-slate-950 text-xs font-bold shadow" aria-label="Move East">▶</button>
+            </div>
+            <button id="dpadDown" class="w-8 h-8 rounded-lg bg-slate-900/90 border border-slate-700 text-white flex items-center justify-center active:bg-amber-500 active:text-slate-950 text-xs font-bold shadow" aria-label="Move South">▼</button>
+          </div>
+
+          <!-- Transport Mode Quick Selector (Bottom Right of Canvas) -->
+          <div class="absolute bottom-3 right-3 bg-slate-900/90 border border-slate-700/90 rounded-xl p-1.5 flex items-center gap-1 z-10 backdrop-blur-sm">
+            <button data-transport="walk" class="transport-btn px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-300 hover:bg-slate-800 transition" title="Walk (Free, Slower)">🚶 Walk</button>
+            <button data-transport="trotro" class="transport-btn px-2 py-1 rounded-lg text-[11px] font-semibold bg-amber-500 text-slate-950 transition" title="Trotro Minibus (GH₵ 8)">🚐 Trotro</button>
+            <button data-transport="okada" class="transport-btn px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-300 hover:bg-slate-800 transition" title="Okada Motorbike (GH₵ 25, Fast)">🏍️ Okada</button>
+            <button data-transport="bolt" class="transport-btn px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-300 hover:bg-slate-800 transition" title="Bolt AC Cab / Personal Car">🚕 Bolt/Car</button>
+          </div>
+        </div>
+
+        <!-- Quick Landmark Strip -->
+        <div id="landmarkQuickStrip" class="px-3 py-2 bg-slate-950 border-t border-slate-800/90 flex items-center gap-1.5 overflow-x-auto">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- Current Location Details & Actions Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex-1 flex flex-col justify-between">
+        <div>
+          <div class="flex flex-wrap items-start justify-between gap-2 pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+              <div id="locIconBox" class="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-2xl shrink-0">
+                🏠
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 id="locTitle" class="font-display font-bold text-lg text-white">Madina Self-Contained</h2>
+                  <span id="locDistrictTag" class="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-amber-300 border border-slate-700 font-medium">Madina Zongo Junction</span>
+                </div>
+                <p id="locDescription" class="text-xs text-slate-400 mt-0.5">Your humble "Chamber & Hall" starter spot. Watch out for Saturday rent and ECG Dumsor!</p>
+              </div>
+            </div>
+            <!-- Quick Emergency Needs Buttons -->
+            <div class="flex items-center gap-1.5">
+              <button id="btnQuickSnack" class="px-2.5 py-1.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/60 text-emerald-300 text-xs font-semibold transition" title="Buy Roadside Bofrot & Kalyppo (GH₵ 15)">
+                🍩 Quick Bofrot (₵15)
+              </button>
+              <button id="btnQuickRestroom" class="px-2.5 py-1.5 rounded-xl bg-sky-950/80 hover:bg-sky-900 border border-sky-700/60 text-sky-300 text-xs font-semibold transition" title="Use Public Restroom (GH₵ 5)">
+                🚽 Washroom (₵5)
+              </button>
+            </div>
+          </div>
+
+          <!-- Actions Grid inside Current Location -->
+          <div class="mt-3">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+              <span>Available Actions at this Location</span>
+              <span id="locPlayersPresent" class="text-emerald-400 font-normal">👥 4 Accra sims here</span>
+            </div>
+            <div id="locationActionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Street Ticker / Activity Log -->
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-2 truncate">
+            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase shrink-0">Accra Street Gist</span>
+            <span id="streetGistTicker" class="text-slate-300 truncate">Welcome to Accra Life! Chale, hustle hard before Saturday rent arrives!</span>
+          </div>
+          <span id="netWorthDisplay" class="text-slate-400 font-mono text-[11px] shrink-0">Net Worth: GH₵ 650</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Multi-Tab Control Center (Careers, Skills, Housing/Cars, Billboards & Plots, Social/MoMo) (5 cols) -->
+    <aside class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl flex flex-col overflow-hidden h-[660px] lg:h-auto">
+      <!-- Navigation Tabs -->
+      <div class="grid grid-cols-5 bg-slate-950 border-b border-slate-800 p-1 gap-1 shrink-0">
+        <button data-tab="careers" class="tab-btn py-2 px-1 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 transition flex flex-col items-center gap-0.5">
+          <span>💼</span>
+          <span>Work</span>
+        </button>
+        <button data-tab="skills" class="tab-btn py-2 px-1 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex flex-col items-center gap-0.5">
+          <span>🎓</span>
+          <span>Skills</span>
+        </button>
+        <button data-tab="lifestyle" class="tab-btn py-2 px-1 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex flex-col items-center gap-0.5">
+          <span>🏡</span>
+          <span>Assets</span>
+        </button>
+        <button data-tab="billboards" class="tab-btn py-2 px-1 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex flex-col items-center gap-0.5">
+          <span>🪧</span>
+          <span>Flex</span>
+        </button>
+        <button data-tab="social" class="tab-btn py-2 px-1 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex flex-col items-center gap-0.5">
+          <span>📱</span>
+          <span>Social</span>
+        </button>
+      </div>
+
+      <!-- Tab Content Panels -->
+      <div class="flex-1 overflow-y-auto p-3.5 space-y-3">
+
+        <!-- TAB 1: CAREERS & HUSTLES -->
+        <div id="tab-careers" class="tab-panel space-y-3">
+          <div class="bg-gradient-to-br from-slate-800/90 to-slate-900 border border-slate-700/80 rounded-xl p-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Current Career</span>
+              <span id="careerTierBadge" class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">Level 1 / 5</span>
+            </div>
+            <h3 id="currentCareerName" class="font-display font-bold text-base text-white mt-0.5">Tech & Software (Accra Digital Centre)</h3>
+            <p id="currentRoleTitle" class="text-xs text-slate-300">Role: <strong class="text-amber-300">NSS Tech Intern</strong> • Pay: <strong class="text-emerald-400">GH₵ 120 / shift</strong></p>
+
+            <!-- Promotion Progress -->
+            <div class="mt-2.5">
+              <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                <span>Work Performance / Shift XP</span>
+                <span id="careerXpText">25 / 100 XP</span>
+              </div>
+              <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                <div id="careerXpBar" class="h-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-300" style="width: 25%"></div>
+              </div>
+              <div id="careerPromoReq" class="text-[11px] text-slate-400 mt-1.5">Next Role: Junior Dev (Requires Coding Lv. 2)</div>
+            </div>
+
+            <div class="mt-3 flex gap-2">
+              <button id="btnWorkShiftNow" class="flex-1 py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow">
+                ⚡ Work Shift Now (+GH₵ 120)
+              </button>
+              <button id="btnRequestPromotion" class="py-2 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs transition">
+                🚀 Promote
+              </button>
+            </div>
+          </div>
+
+          <!-- Side Hustles -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fast Accra Side Hustles</h4>
+            <div id="sideHustlesList" class="grid grid-cols-1 gap-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Switch Career Tracks -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Switch Accra Career Track (7 Industries)</h4>
+            <div id="careersList" class="space-y-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: 9 SKILLS & UNIVERSITY OF GHANA -->
+        <div id="tab-skills" class="tab-panel hidden space-y-3">
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+            <h3 class="font-display font-bold text-sm text-white">University of Ghana (Legon) & Skill Mastery</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Train your 9 skills to unlock high-paying promotions, win Afrobeats awards, and maximize business profits.</p>
+          </div>
+          <div id="skillsList" class="space-y-2">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- TAB 3: HOUSING, CARS & HOME UPGRADES -->
+        <div id="tab-lifestyle" class="tab-panel hidden space-y-4">
+          <!-- Saturday Rent Box -->
+          <div class="bg-slate-950 border border-amber-500/40 rounded-xl p-3 flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold text-amber-300">Saturday Landlord Rent System</div>
+              <div id="rentStatusDetail" class="text-[11px] text-slate-400">Current Home: Madina Self-Contained (GH₵ 350/wk)</div>
+            </div>
+            <button id="btnPayRentEarly" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">
+              Pay Rent Now
+            </button>
+          </div>
+
+          <!-- Accra Apartments & Mansions -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Accra Real Estate & Apartments</h4>
+            <div id="housingList" class="space-y-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Home Utilities (ECG Dumsor Backup & Polytank) -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">ECG Dumsor & Water Backups</h4>
+            <div id="utilitiesList" class="space-y-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Vehicles -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Cars & Whip Dealership</h4>
+            <div id="vehiclesList" class="space-y-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: BILLBOARDS & LABADI LAGOON PLOTS (Viral Lagos Life Feature!) -->
+        <div id="tab-billboards" class="tab-panel hidden space-y-4">
+          <div class="bg-gradient-to-r from-amber-500/15 to-emerald-500/15 border border-amber-500/40 rounded-xl p-3">
+            <h3 class="font-display font-bold text-sm text-white flex items-center gap-1.5">🪧 Accra City Billboards & Waterfront Plots</h3>
+            <p class="text-xs text-slate-300 mt-1">Inspired by Lagos Life's iconic city flex! Rent major Accra billboards to broadcast your custom message live on the city map, or acquire prime Labadi & Ada Waterfront plots for passive daily dividends.</p>
+          </div>
+
+          <!-- Custom Message Input for Rented Billboards -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
+            <label for="inputBillboardMsg" class="block text-xs font-bold text-slate-300">Your Custom Billboard Flex Message (Shows on City Map!):</label>
+            <div class="flex gap-2">
+              <input id="inputBillboardMsg" type="text" maxlength="36" value="CHALE WE DEY MOVE! #ACCRALIFE" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400" placeholder="Enter your billboard text...">
+              <button id="btnUpdateBillboardMsg" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">
+                Broadcast
+              </button>
+            </div>
+          </div>
+
+          <!-- Billboards List -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Rent Accra Highway Billboards (+Social & Clout)</h4>
+            <div id="billboardsList" class="space-y-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Waterfront / Lagoon Plots -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Prime Labadi & Ada Waterfront Plots (Passive Income)</h4>
+            <div id="plotsList" class="space-y-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 5: SOCIAL WORLD, MOMO TRANSFERS & LEADERBOARD -->
+        <div id="tab-social" class="tab-panel hidden space-y-4">
+          <!-- Live Accra Players Online -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                Accra Lobby — Active Players Nearby
+              </span>
+              <button id="btnAskUrgent2k" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition">
+                🙏 Ask for "Urgent 2k" MoMo
+              </button>
+            </div>
+
+            <!-- Live Chat Feed -->
+            <div id="socialChatFeed" class="h-36 overflow-y-auto bg-slate-900/90 border border-slate-800 rounded-lg p-2.5 space-y-1.5 text-xs">
+              <!-- Populated by JS -->
+            </div>
+
+            <!-- Send Chat Message -->
+            <div class="mt-2 flex gap-1.5">
+              <input id="inputSocialChat" type="text" maxlength="80" placeholder="Say something to Accra lobby (e.g. Chale who dey Osu?)..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-400">
+              <button id="btnSendSocialChat" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition">
+                Send
+              </button>
+            </div>
+          </div>
+
+          <!-- Interact / Send MoMo to Other Sims -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Meet Accra Residents & Send MoMo</h4>
+            <div id="npcPlayersList" class="space-y-2">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Accra Rich List Leaderboard -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-2">🏆 Accra Richest Leaderboard</h4>
+            <div id="leaderboardList" class="bg-slate-950 border border-slate-800 rounded-xl divide-y divide-slate-800/80">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+  </main>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none"></div>
+
+  <!-- Character Customization & Welcome Modal -->
+  <div id="charModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="font-display font-bold text-lg text-white">Customize Your Accra Sim</h3>
+          <p class="text-xs text-slate-400">Personalize your identity in Greater Accra</p>
+        </div>
+        <button id="btnCloseCharModal" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label for="inputSimName" class="block text-xs font-semibold text-slate-300 mb-1">Your Ghanaian Name / Alias</label>
+          <input id="inputSimName" type="text" maxlength="24" value="Kwesi Mensah" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-400">
+        </div>
+
+        <div>
+          <span class="block text-xs font-semibold text-slate-300 mb-1">Choose Avatar Vibe & Outfit Color</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="avatarColorPicker">
+            <button data-color="#10b981" data-emoji="😎" class="avatar-opt py-2 rounded-xl border-2 border-amber-400 bg-emerald-600/30 text-center text-xs font-bold">😎 Kente</button>
+            <button data-color="#f59e0b" data-emoji="👑" class="avatar-opt py-2 rounded-xl border border-slate-700 bg-amber-500/30 text-center text-xs font-bold">👑 Gold</button>
+            <button data-color="#ef4444" data-emoji="🔥" class="avatar-opt py-2 rounded-xl border border-slate-700 bg-rose-600/30 text-center text-xs font-bold">🔥 Osu Drip</button>
+            <button data-color="#3b82f6" data-emoji="💻" class="avatar-opt py-2 rounded-xl border border-slate-700 bg-blue-600/30 text-center text-xs font-bold">💻 Legon</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+        <button id="btnSaveCharModal" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition">
+          Save & Return to Accra
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- How To Play / Guide Modal -->
+  <div id="guideModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🇬🇭</span>
+          <div>
+            <h3 class="font-display font-bold text-lg text-white">Welcome to Accra Life!</h3>
+            <p class="text-xs text-amber-400">Inspired by the viral Lagos Life Simulator — Built for Ghana</p>
+          </div>
+        </div>
+        <button id="btnCloseGuideModal" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+          <strong class="text-amber-300 block mb-1">1. Keep Your 6 Meters Alive</strong>
+          Balance <strong>Hunger, Energy, Fun, Social, Hygiene, and Bladder</strong>. Grab Waakye at Auntie Muni's, Banku & Tilapia at Labadi Beach, or Kelewele at Osu Night Market. Don't get caught in traffic with a low bladder!
+        </div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+          <strong class="text-emerald-300 block mb-1">2. Climb 7 Careers, Study at Legon & Pay Saturday Rent</strong>
+          Work shifts at Airport City or Makola Market, study 9 skills at <strong>University of Ghana (Legon)</strong>, and keep enough GH₵ in your MoMo wallet for <strong>Saturday Landlord Rent</strong>. Beware of random <strong>ECG Dumsor</strong> power outages until you buy a Generator or Solar Inverter!
+        </div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+          <strong class="text-sky-300 block mb-1">3. Trotros, Radio Stations, Billboards & Social MoMo</strong>
+          Move around Greater Accra using <strong>WASD / Arrow keys</strong>, the on-screen D-pad, or by clicking any landmark on the map. Tune into <strong>7 synthesized Ghanaian Radio Stations</strong>, rent highway <strong>Billboards</strong> to display your own custom flex message on the map, buy <strong>Waterfront Plots</strong>, and chat or send MoMo to other Accra sims!
+        </div>
+      </div>
+
+      <button id="btnConfirmGuideModal" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition">
+        Chale, Let's Hustle!
+      </button>
+    </div>
+  </div>
+
+  <!-- Reset Confirmation Modal -->
+  <div id="resetModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-rose-800/70 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <h3 class="font-display font-bold text-base text-white">Start a New Life in Accra?</h3>
+      <p class="text-xs text-slate-400">This will reset your GH₵ MoMo wallet, skills, apartment, and billboards back to day one in Madina.</p>
+      <div class="flex gap-2 justify-end">
+        <button id="btnCancelReset" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">Cancel</button>
+        <button id="btnConfirmReset" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold">Yes, Reset Life</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'accra_life_sim_v1';
+
+    const LOCATIONS = [
+      {
+        id: 'home',
+        name: 'Home Residence',
+        district: 'Madina / Residential',
+        icon: '🏠',
+        x: 0.22,
+        y: 0.24,
+        color: '#10b981',
+        desc: 'Your personal pad in Accra. Rest up, shower, cook Jollof, and recharge away from city traffic.',
+        actions: [
+          { id: 'sleep', name: 'Deep Sleep (6 hrs)', icon: '🛏️', cost: 0, timeMins: 360, effects: { energy: 65, hunger: -12, bladder: -10 }, msg: 'Slept soundly! Ready for the Accra hustle.' },
+          { id: 'nap', name: 'Power Nap (2 hrs)', icon: '😴', cost: 0, timeMins: 120, effects: { energy: 28, hunger: -5 }, msg: 'Took a refreshing afternoon nap.' },
+          { id: 'shower', name: 'Polytank Shower', icon: '🚿', cost: 0, timeMins: 30, effects: { hygiene: 55, energy: 5 }, msg: 'Fresh and clean! Looking sharp.' },
+          { id: 'toilet', name: 'Use Home Washroom', icon: '🚽', cost: 0, timeMins: 15, effects: { bladder: 75, hygiene: 5 }, msg: 'Relief! Washroom break complete.' },
+          { id: 'cook_jollof', name: 'Cook Ghana Jollof & Chicken', icon: '🍛', cost: 35, timeMins: 60, effects: { hunger: 55, fun: 12 }, skill: 'cooking', skillXp: 18, msg: 'Cooked smoky party-style Ghana Jollof!' },
+          { id: 'indomie', name: 'Boil Indomie & Egg', icon: '🍜', cost: 15, timeMins: 25, effects: { hunger: 32 }, skill: 'cooking', skillXp: 8, msg: 'Quick Indomie & sardine sorted your hunger.' }
+        ]
+      },
+      {
+        id: 'auntie_muni',
+        name: 'Auntie Muni Waakye',
+        district: 'Labone / Osu',
+        icon: '🍛',
+        x: 0.56,
+        y: 0.58,
+        color: '#f59e0b',
+        desc: 'Legendary Accra Waakye joint & evening Kelewele spot. Always a queue of hungry bankers and creatives!',
+        actions: [
+          { id: 'waakye_full', name: 'Waakye Assorted (Wele, Plantain, Egg)', icon: '🥘', cost: 45, timeMins: 40, effects: { hunger: 68, fun: 15, social: 10 }, msg: 'Loaded Waakye in katemfe leaf with shito and gari!' },
+          { id: 'kelewele', name: 'Spicy Kelewele & Groundnuts', icon: '🍌', cost: 20, timeMins: 25, effects: { hunger: 30, fun: 12 }, msg: 'Hot spicy ginger Kelewele hit the spot!' },
+          { id: 'sobolo', name: 'Chilled Sobolo & Bofrot', icon: '🥤', cost: 15, timeMins: 20, effects: { hunger: 18, energy: 15, fun: 8 }, msg: 'Ice-cold spiced hibiscus Sobolo refreshed your spirit.' },
+          { id: 'gist_queue', name: 'Gist in the Waakye Queue', icon: '🗣️', cost: 0, timeMins: 30, effects: { social: 26, fun: 10 }, skill: 'charisma', skillXp: 12, msg: 'Debated Black Stars football and Accra rent prices in the queue!' }
+        ]
+      },
+      {
+        id: 'makola',
+        name: 'Makola & Kantamanto',
+        district: 'Central Accra',
+        icon: '🛍️',
+        x: 0.34,
+        y: 0.68,
+        color: '#ec4899',
+        desc: 'The beating commercial heart of Accra! Trade goods, thrift at Bend Down Boutique, and make fast Cedi moves.',
+        actions: [
+          { id: 'hustle_bale', name: 'Flip Kantamanto Thrift Bale', icon: '👕', cost: 40, earn: 115, timeMins: 90, effects: { energy: -18, hygiene: -12, social: 14 }, skill: 'hustle', skillXp: 22, msg: 'Curated vintage shirts at Kantamanto and flipped them for profit!' },
+          { id: 'makola_trade', name: 'Assist Makola Wholesale Queen', icon: '📦', cost: 0, earn: 65, timeMins: 75, effects: { energy: -15, hunger: -10 }, skill: 'hustle', skillXp: 15, msg: 'Moved fabrics and provisions in Makola! Earned GH₵ 65.' },
+          { id: 'kenkey_fish', name: 'Ga Kenkey, Red Pepper & Fried Fish', icon: '🐟', cost: 25, timeMins: 30, effects: { hunger: 50, energy: 8 }, msg: 'Hot Ga Kenkey with shito and red snapper fueled your hustle.' },
+          { id: 'buy_drip', name: 'Shop Fresh Accra Streetwear', icon: '🕶️', cost: 85, timeMins: 45, effects: { fun: 28, social: 20, hygiene: 15 }, skill: 'charisma', skillXp: 14, msg: 'Stepped out of Kantamanto looking like a million Cedis!' }
+        ]
+      },
+      {
+        id: 'legon',
+        name: 'Univ. of Ghana (Legon)',
+        district: 'Legon Campus',
+        icon: '🎓',
+        x: 0.42,
+        y: 0.18,
+        color: '#3b82f6',
+        desc: 'Premier university campus with Balme Library, Commonwealth Hall ("Vandals"), and Night Market.',
+        actions: [
+          { id: 'study_tech', name: 'Coding Bootcamp at UG CS Dept', icon: '💻', cost: 30, timeMins: 90, effects: { energy: -15, fun: -5 }, skill: 'coding', skillXp: 30, msg: 'Mastered full-stack & AI workflows at Legon!' },
+          { id: 'study_finance', name: 'UGBS Finance & Investment Lecture', icon: '📈', cost: 30, timeMins: 90, effects: { energy: -14 }, skill: 'finance', skillXp: 30, msg: 'Studied treasury bills, forex, and equity markets at UGBS.' },
+          { id: 'study_eng', name: 'Engineering & Power Systems Lab', icon: '⚙️', cost: 30, timeMins: 90, effects: { energy: -15 }, skill: 'engineering', skillXp: 30, msg: 'Built solar & grid prototypes at the Engineering faculty!' },
+          { id: 'legon_night_mkt', name: 'Legon Night Market Hangout', icon: '🌮', cost: 20, timeMins: 45, effects: { hunger: 38, social: 24, fun: 16 }, msg: 'Chilled with students over fried rice and plantain at Night Market.' }
+        ]
+      },
+      {
+        id: 'airport_city',
+        name: 'Airport City & Digital Hub',
+        district: 'Airport / Ridge',
+        icon: '🏢',
+        x: 0.52,
+        y: 0.38,
+        color: '#06b6d4',
+        desc: 'Glass high-rises, multinational headquarters, banks, and tech incubators.',
+        actions: [
+          { id: 'work_shift', name: 'Work Full Career Shift', icon: '💼', isCareerWork: true, timeMins: 180, effects: { energy: -24, hunger: -16, bladder: -14 }, msg: 'Completed a productive shift at work!' },
+          { id: 'overtime_shift', name: 'Grind Overtime Project', icon: '🔥', isOvertimeWork: true, timeMins: 240, effects: { energy: -34, hunger: -22, fun: -10 }, msg: 'Crushed overtime targets! Boss is impressed.' },
+          { id: 'pitch_startup', name: 'Pitch Fintech Deck to Investors', icon: '🚀', cost: 0, earn: 160, reqSkill: { name: 'coding', level: 2 }, timeMins: 120, effects: { energy: -20, social: 22 }, skill: 'finance', skillXp: 24, msg: 'Pitched your MoMo API startup at Airport City and won a grant!' },
+          { id: 'espresso_lunch', name: 'Executive Café Lunch & Networking', icon: '☕', cost: 75, timeMins: 45, effects: { hunger: 42, energy: 22, social: 25 }, skill: 'charisma', skillXp: 16, msg: 'Networked with CEOs over iced latte and jollof bowls.' }
+        ]
+      },
+      {
+        id: 'osu_oxford',
+        name: 'Osu Oxford St & Bloom Bar',
+        district: 'Osu',
+        icon: '🍸',
+        x: 0.62,
+        y: 0.72,
+        color: '#a855f7',
+        desc: 'Accra’s electric nightlife strip! Fairy lights, music studios, rooftop lounges, and Detty December energy.',
+        actions: [
+          { id: 'bloom_party', name: 'Turn Up at Bloom Bar VIP', icon: '🍾', cost: 140, timeMins: 120, effects: { fun: 65, social: 50, energy: -20, bladder: -20 }, skill: 'charisma', skillXp: 22, msg: 'Danced to Asakaa & Afrobeats under the fairy lights at Bloom Bar!' },
+          { id: 'record_hit', name: 'Record Afrobeats / Hiplife Track', icon: '🎙️', cost: 50, earn: 130, timeMins: 120, effects: { energy: -18, fun: 25 }, skill: 'music', skillXp: 32, msg: 'Laid down a fire hook in an Osu studio! DJs are spinning it.' },
+          { id: 'osu_barber', name: 'Sharp Fade & Spa Trim at Osu', icon: '💈', cost: 50, timeMins: 45, effects: { hygiene: 50, social: 18, fun: 15 }, msg: 'Stepped out the barber chair with a razor-sharp hairline!' },
+          { id: 'pork_show', name: 'Osu Night Grilled Pork & Yam', icon: '🍖', cost: 55, timeMins: 40, effects: { hunger: 58, fun: 18 }, msg: 'Sizzling Osu grilled pork with pepper sauce — unmatched!' }
+        ]
+      },
+      {
+        id: 'labadi_beach',
+        name: 'Labadi Pleasure Beach',
+        district: 'La Coastline',
+        icon: '🏖️',
+        x: 0.82,
+        y: 0.78,
+        color: '#0ea5e9',
+        desc: 'Golden Atlantic sand, galloping horses, live reggae/highlife bands, and fresh grilled Banku & Tilapia.',
+        actions: [
+          { id: 'banku_tilapia', name: 'Fresh Banku & Grilled Tilapia', icon: '🐟', cost: 80, timeMins: 60, effects: { hunger: 75, fun: 25, social: 15 }, msg: 'Destroyed hot Banku with spicy grilled Tilapia by the ocean waves!' },
+          { id: 'horse_ride', name: 'Gallop Beach Horse & Photo Shoot', icon: '🐎', cost: 45, timeMins: 45, effects: { fun: 48, social: 22 }, skill: 'art', skillXp: 15, msg: 'Rode a decorated horse along Labadi shoreline!' },
+          { id: 'beach_workout', name: 'Ocean Breeze Calisthenics & Swim', icon: '🏊', cost: 0, timeMins: 60, effects: { energy: -12, hygiene: 25, fun: 30 }, skill: 'fitness', skillXp: 28, msg: 'Great coastal workout and Atlantic dip!' },
+          { id: 'coconut', name: 'Drink Fresh Roadside Coconut', icon: '🥥', cost: 10, timeMins: 15, effects: { hunger: 16, energy: 14, bladder: -8 }, msg: 'Refreshing cold coconut water with soft jelly inside!' }
+        ]
+      },
+      {
+        id: 'jamestown',
+        name: 'Jamestown Lighthouse & Bukom',
+        district: 'Old Accra',
+        icon: '🥊',
+        x: 0.16,
+        y: 0.80,
+        color: '#ef4444',
+        desc: 'Historic coastal Ga heritage district, iconic red-and-white lighthouse, Bukom boxing rings, and Chale Wote art.',
+        actions: [
+          { id: 'chale_wote', name: 'Paint Mural at Chale Wote Art Walk', icon: '🎨', cost: 20, earn: 95, timeMins: 90, effects: { fun: 42, social: 30, energy: -14 }, skill: 'art', skillXp: 30, msg: 'Created vibrant street art in Jamestown and sold prints to tourists!' },
+          { id: 'bukom_boxing', name: 'Spar at Bukom Boxing Gym', icon: '🥊', cost: 15, timeMins: 75, effects: { energy: -20, hygiene: -15, fun: 28 }, skill: 'fitness', skillXp: 32, msg: 'Trained footwork and stamina with Bukom boxing champions!' },
+          { id: 'lighthouse_tour', name: 'Climb Jamestown Lighthouse View', icon: '🗼', cost: 15, timeMins: 40, effects: { fun: 32, social: 18 }, msg: 'Took in panoramic views of Fishing Harbour and Old Accra.' }
+        ]
+      },
+      {
+        id: 'east_legon',
+        name: 'East Legon & Polo Club',
+        district: 'East Legon / Adjiringanor',
+        icon: '🥂',
+        x: 0.76,
+        y: 0.26,
+        color: '#eab308',
+        desc: 'Mansions, G-Wagons, luxury lounges, executive fitness clubs, and high-net-worth dealmaking.',
+        actions: [
+          { id: 'polo_network', name: 'VIP Networking at Polo & Golf Club', icon: '⛳', cost: 150, timeMins: 90, effects: { social: 55, fun: 40 }, skill: 'charisma', skillXp: 28, msg: 'Rubbed shoulders with East Legon moguls and diplomats!' },
+          { id: 'real_estate_deal', name: 'Broker East Legon Land Deal', icon: '🏗️', cost: 100, earn: 320, reqSkill: { name: 'finance', level: 3 }, timeMins: 120, effects: { energy: -20, social: 25 }, skill: 'finance', skillXp: 30, msg: 'Closed a clean land commission in East Legon! Massive payout.' },
+          { id: 'luxury_spa', name: 'Executive Spa & Massage Retreat', icon: '🧖', cost: 120, timeMins: 75, effects: { hygiene: 70, energy: 45, fun: 35 }, msg: 'Total rejuvenation at an East Legon luxury wellness spa.' }
+        ]
+      },
+      {
+        id: 'worship_hub',
+        name: 'National Mosque & Cathedral',
+        district: 'Kanda / Ridge',
+        icon: '🕌',
+        x: 0.36,
+        y: 0.44,
+        color: '#14b8a6',
+        desc: 'Peaceful spiritual sanctuary at Kanda & Ridge for reflection, thanksgiving, community warmth, and weddings.',
+        actions: [
+          { id: 'service_prayer', name: 'Attend Prayer / Thanksgiving Service', icon: '🙏', cost: 0, timeMins: 60, effects: { fun: 30, social: 38, energy: 15 }, msg: 'Spirit uplifted! Connected with the community in peace and gratitude.' },
+          { id: 'charity_give', name: 'Donate to Community Youth Fund', icon: '💝', cost: 50, timeMins: 30, effects: { social: 45, fun: 30 }, skill: 'charisma', skillXp: 20, msg: 'Your generosity blessed the neighborhood and boosted your reputation!' },
+          { id: 'attend_wedding', name: 'Attend Rich Ghanaian Traditional Engagement', icon: '💍', cost: 40, timeMins: 90, effects: { hunger: 55, social: 50, fun: 45 }, msg: 'Rocked Kente to a joyful engagement party with endless Jollof and music!' }
+        ]
+      }
+    ];
+
+    const CAREERS = [
+      {
+        id: 'tech',
+        name: 'Tech & Fintech (Accra Digital Centre)',
+        icon: '💻',
+        reqSkill: 'coding',
+        levels: [
+          { title: 'NSS Tech Intern', pay: 120, reqLv: 1 },
+          { title: 'Junior Frontend Dev', pay: 240, reqLv: 2 },
+          { title: 'Senior Mobile Money Engineer', pay: 450, reqLv: 3 },
+          { title: 'Principal Fintech Architect', pay: 820, reqLv: 4 },
+          { title: 'Pan-African Tech Unicorn CTO', pay: 1500, reqLv: 5 }
+        ]
+      },
+      {
+        id: 'music',
+        name: 'Afrobeats, Hiplife & Asakaa Music',
+        icon: '🎵',
+        reqSkill: 'music',
+        levels: [
+          { title: 'Underground Studio Artist', pay: 110, reqLv: 1 },
+          { title: 'Osu Club Mic Opener', pay: 230, reqLv: 2 },
+          { title: 'Chart-Topping Hitmaker', pay: 480, reqLv: 3 },
+          { title: 'TGMA Artist of the Year', pay: 900, reqLv: 4 },
+          { title: 'Global Afro-Fusion Superstar', pay: 1750, reqLv: 5 }
+        ]
+      },
+      {
+        id: 'finance',
+        name: 'Banking & Investment (Airport City)',
+        icon: '🏦',
+        reqSkill: 'finance',
+        levels: [
+          { title: 'Graduate Bank Teller', pay: 130, reqLv: 1 },
+          { title: 'Treasury & Forex Analyst', pay: 260, reqLv: 2 },
+          { title: 'Corporate Investment Manager', pay: 500, reqLv: 3 },
+          { title: 'Private Equity Director', pay: 920, reqLv: 4 },
+          { title: 'West African Banking Mogul', pay: 1650, reqLv: 5 }
+        ]
+      },
+      {
+        id: 'market',
+        name: 'Import & Trading Empire (Makola / Tema)',
+        icon: '🚢',
+        reqSkill: 'hustle',
+        levels: [
+          { title: 'Kantamanto Bale Sorter', pay: 115, reqLv: 1 },
+          { title: 'Makola Wholesale Trader', pay: 250, reqLv: 2 },
+          { title: 'Dubai & Guangzhou Importer', pay: 490, reqLv: 3 },
+          { title: 'Tema Port Clearing Magnate', pay: 880, reqLv: 4 },
+          { title: 'Gold Coast Trade Conglomerate CEO', pay: 1600, reqLv: 5 }
+        ]
+      },
+      {
+        id: 'media',
+        name: 'Media, Radio & Content Creation',
+        icon: '🎥',
+        reqSkill: 'charisma',
+        levels: [
+          { title: 'Accra Street Vlogger', pay: 110, reqLv: 1 },
+          { title: 'Morning Drive Radio Producer', pay: 235, reqLv: 2 },
+          { title: 'Prime-Time TV & Podcast Host', pay: 460, reqLv: 3 },
+          { title: 'Brand Ambassador & Executive Producer', pay: 850, reqLv: 4 },
+          { title: 'Multimedia Network Owner', pay: 1550, reqLv: 5 }
+        ]
+      },
+      {
+        id: 'culinary',
+        name: 'Culinary & Hospitality Mogul',
+        icon: '🍽️',
+        reqSkill: 'cooking',
+        levels: [
+          { title: 'Roadside Kelewele & Waakye Chef', pay: 115, reqLv: 1 },
+          { title: 'Popular Osu Chop Bar Manager', pay: 240, reqLv: 2 },
+          { title: 'Labone Fine Dining Head Chef', pay: 460, reqLv: 3 },
+          { title: 'Detty December Beach Club Owner', pay: 860, reqLv: 4 },
+          { title: '5-Star Atlantic Resort Chain Tycoon', pay: 1580, reqLv: 5 }
+        ]
+      },
+      {
+        id: 'engineering',
+        name: 'Energy, Real Estate & Infrastructure',
+        icon: '⚡',
+        reqSkill: 'engineering',
+        levels: [
+          { title: 'Site Technician', pay: 125, reqLv: 1 },
+          { title: 'Solar & Grid Project Engineer', pay: 255, reqLv: 2 },
+          { title: 'Cantonments Development Lead', pay: 495, reqLv: 3 },
+          { title: 'Chief Infrastructure Director', pay: 910, reqLv: 4 },
+          { title: 'Smart City & Energy Baron', pay: 1680, reqLv: 5 }
+        ]
+      }
+    ];
+
+    const SKILLS_META = [
+      { id: 'coding', name: 'Coding & Tech', icon: '💻', desc: 'Software, fintech APIs & digital innovation', studyCost: 35 },
+      { id: 'hustle', name: 'Street Hustle & Trade', icon: '🤝', desc: 'Makola bargaining, imports & deal closing', studyCost: 30 },
+      { id: 'charisma', name: 'Charisma & Clout', icon: '✨', desc: 'Media presence, VIP networking & persuasion', studyCost: 30 },
+      { id: 'finance', name: 'Finance & Investing', icon: '📊', desc: 'Banking, T-bills, real estate & wealth', studyCost: 35 },
+      { id: 'music', name: 'Music & Afrobeats', icon: '🎸', desc: 'Highlife, Hiplife, Asakaa & studio production', studyCost: 35 },
+      { id: 'cooking', name: 'Ghanaian Culinary Art', icon: '🍲', desc: 'Smoky Jollof, Waakye, Banku & hospitality', studyCost: 25 },
+      { id: 'engineering', name: 'Engineering & Solar', icon: '🛠️', desc: 'Grid power, architecture & heavy projects', studyCost: 35 },
+      { id: 'fitness', name: 'Fitness & Stamina', icon: '💪', desc: 'Slows energy drain & boosts Bukom grit', studyCost: 25 },
+      { id: 'art', name: 'Art & Creative Design', icon: '🎨', desc: 'Chale Wote murals, fashion & visual culture', studyCost: 30 }
+    ];
+
+    const SIDE_HUSTLES = [
+      { id: 'momo_agent', name: 'Run Roadside MoMo Kiosk Shift', icon: '📱', earn: 55, timeMins: 60, energyCost: 12, skill: 'hustle' },
+      { id: 'freelance_web', name: 'Fix Website for Osu Boutique', icon: '🖥️', earn: 90, timeMins: 75, energyCost: 15, skill: 'coding' },
+      { id: 'mc_event', name: 'MC a Saturday Outdooring / Party', icon: '🎤', earn: 85, timeMins: 70, energyCost: 14, skill: 'charisma' }
+    ];
+
+    const HOUSES = [
+      { id: 'madina', name: 'Madina Chamber & Hall Self-Contained', rent: 350, moveInFee: 0, energyBonus: 1.0, prestige: 10, desc: 'Starter pad near Zongo Junction. Lively area!' },
+      { id: 'osu_studio', name: 'Osu Oxford Street Loft Studio', rent: 750, moveInFee: 1200, energyBonus: 1.15, prestige: 35, desc: 'Walkable to nightlife, restaurants & the beach.' },
+      { id: 'east_legon', name: 'East Legon 3-Bed Executive Townhouse', rent: 1600, moveInFee: 3500, energyBonus: 1.3, prestige: 75, desc: 'Gated security, swimming pool & plush comfort.' },
+      { id: 'cantonments', name: 'Cantonments Ambassadorial Villa', rent: 3200, moveInFee: 8500, energyBonus: 1.5, prestige: 150, desc: 'Tree-lined luxury estate with 24/7 backup power.' }
+    ];
+
+    const UTILITIES = [
+      { id: 'polytank', name: 'Rambler Polytank + Booster Pump', price: 650, desc: 'Never run out of water! Home shower restores +15% extra hygiene.' },
+      { id: 'generator', name: '5kVA "I Pass My Neighbour" Generator', price: 1100, desc: 'Protects your home from ECG Dumsor power outages!' },
+      { id: 'solar', name: 'Roof Solar + Tesla Powerwall System', price: 2800, desc: '100% clean off-grid immunity + +10 daily Fun & Prestige!' }
+    ];
+
+    const VEHICLES = [
+      { id: 'corolla', name: 'Toyota Corolla ("Home Used" 2018)', price: 2400, desc: 'Zero transport fares, AC coolness & reliable Accra daily driver.' },
+      { id: 'civic', name: 'Honda Civic RS Turbo (Osu Spec)', price: 5200, desc: 'Fast travel across Accra + +25 Social Clout.' },
+      { id: 'gwagon', name: 'Mercedes-AMG G63 ("East Legon Boss")', price: 14500, desc: 'Ultimate Accra flex! Instant travel + massive leaderboard prestige.' }
+    ];
+
+    const BILLBOARDS = [
+      { id: 'bb_tetteh', name: 'Tetteh Quarshie Interchange Mega-Board', rentPrice: 500, cloutBonus: 35, mapPos: { x: 0.58, y: 0.30 } },
+      { id: 'bb_osu', name: 'Osu Oxford Street LED Digital Screen', rentPrice: 850, cloutBonus: 60, mapPos: { x: 0.66, y: 0.62 } },
+      { id: 'bb_airport', name: 'Kotoka Airport Boulevard Sky-Sign', rentPrice: 1400, cloutBonus: 110, mapPos: { x: 0.45, y: 0.48 } }
+    ];
+
+    const WATERFRONT_PLOTS = [
+      { id: 'plot_labadi', name: 'Labadi Beachfront Cabana Plot #4', price: 1800, dailyIncome: 180, desc: 'Earns GH₵ 180 every single day from beach tourists!' },
+      { id: 'plot_korkor', name: 'Korle Lagoon Eco-Marina Plot #12', price: 3200, dailyIncome: 340, desc: 'Earns GH₵ 340/day in commercial lease dividends.' },
+      { id: 'plot_ada', name: 'Ada Foah Volta Estuary Luxury Island Plot', price: 6800, dailyIncome: 780, desc: 'Jet-ski resort plot earning GH₵ 780/day automatically!' }
+    ];
+
+    const SIMULATED_PLAYERS = [
+      { id: 'p1', name: 'Nana_Ama_Osu', title: 'Fashion Mogul', wealth: 19400, locId: 'osu_oxford', color: '#f43f5e', emoji: '💃', bio: 'CEO @ Osu Silk Studio' },
+      { id: 'p2', name: 'Kofi_TechBro', title: 'Fintech Founder', wealth: 14200, locId: 'airport_city', color: '#3b82f6', emoji: '💻', bio: 'Building MoMo 3.0 at Airport City' },
+      { id: 'p3', name: 'Alhaji_EastLegon', title: 'Real Estate Don', wealth: 32500, locId: 'east_legon', color: '#eab308', emoji: '👑', bio: 'Landlord of 14 houses' },
+      { id: 'p4', name: 'Nii_BukomChamp', title: 'Pro Boxer', wealth: 4800, locId: 'jamestown', color: '#ef4444', emoji: '🥊', bio: 'Jamestown pride! Undefeated.' },
+      { id: 'p5', name: 'Efya_LegonBaddie', title: 'Content Creator', wealth: 6900, locId: 'auntie_muni', color: '#a855f7', emoji: '🤳', bio: 'Vlogging Accra food & lifestyle' },
+      { id: 'p6', name: 'Yaw_Kumerica', title: 'Asakaa Producer', wealth: 9100, locId: 'labadi_beach', color: '#10b981', emoji: '🎧', bio: 'Making beats by the beach' }
+    ];
+
+    const STREET_CHAT_LINES = [
+      { user: 'Kofi_TechBro', text: 'Chale, who dey Airport City? Just closed our pre-seed round! 🚀' },
+      { user: 'Efya_LegonBaddie', text: 'The queue at Auntie Muni Waakye today no be small o 😭🍲' },
+      { user: 'Nii_BukomChamp', text: 'Chale send urgent 100 Cedis for data make I stream my Bukom spar 🙏' },
+      { user: 'Alhaji_EastLegon', text: 'Saturday rent is coming! Hope my tenants in Madina are ready 👀' },
+      { user: 'Nana_Ama_Osu', text: 'Bloom Bar tonight!! Detty December came early in Osu 🍾✨' },
+      { user: 'Yaw_Kumerica', text: 'ECG just took light for Madina again?! Thank God for solar ☀️' },
+      { user: 'Kofi_TechBro', text: 'Just rented the Tetteh Quarshie billboard to flex on my ex 😂🪧' },
+      { user: 'Efya_LegonBaddie', text: 'Labadi Beach tilapia + banku is undefeated wallahi 🐟🔥' }
+    ];
+
+    function getDefaultState() {
+      return {
+        playerName: 'Kwesi Mensah',
+        avatarColor: '#10b981',
+        avatarEmoji: '😎',
+        cash: 650,
+        day: 1,
+        minutesOfDay: 8 * 60,
+        speed: 1,
+        currentLocationId: 'home',
+        playerPos: { x: 0.22, y: 0.24 },
+        targetPos: null,
+        pendingLocationId: null,
+        transportMode: 'trotro',
+        ecgLightsOn: true,
+        meters: {
+          hunger: 85,
+          energy: 82,
+          fun: 75,
+          social: 70,
+          hygiene: 90,
+          bladder: 88
+        },
+        careerId: 'tech',
+        careerLevel: 0,
+        careerXp: 25,
+        skills: {
+          coding: { level: 1, xp: 20 },
+          hustle: { level: 1, xp: 15 },
+          charisma: { level: 1, xp: 10 },
+          finance: { level: 1, xp: 0 },
+          music: { level: 1, xp: 0 },
+          cooking: { level: 1, xp: 10 },
+          engineering: { level: 1, xp: 0 },
+          fitness: { level: 1, xp: 10 },
+          art: { level: 1, xp: 0 }
+        },
+        houseId: 'madina',
+        ownedUtilities: [],
+        ownedVehicles: [],
+        rentedBillboards: [],
+        billboardMessage: 'CHALE WE DEY MOVE! #ACCRALIFE',
+        ownedPlots: [],
+        friends: {},
+        rentPaidThisWeek: false
+      };
+    }
+
+    let state = getDefaultState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state = Object.assign(getDefaultState(), parsed);
+          state.meters = Object.assign(getDefaultState().meters, parsed.meters || {});
+          state.skills = Object.assign(getDefaultState().skills, parsed.skills || {});
+        }
+      } catch (err) {
+        // Ignore storage errors
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (err) {
+        // Ignore storage errors
+      }
+    }
+
+    let audioCtx = null;
+    let soundEnabled = false;
+    let radioStationIndex = 0;
+    let radioStep = 0;
+    let radioIntervalId = null;
+
+    const RADIO_STATIONS = [
+      { name: 'YFM 107.9 Afrobeats', tempo: 240, notes: [261.6, 329.6, 392.0, 329.6, 440.0, 392.0, 329.6, 293.7], wave: 'triangle' },
+      { name: 'Citi 97.3 Highlife Classics', tempo: 280, notes: [293.7, 369.9, 440.0, 587.3, 493.9, 440.0, 369.9, 329.6], wave: 'sine' },
+      { name: 'Joy 99.7 Drive Vibes', tempo: 260, notes: [220.0, 277.2, 329.6, 440.0, 329.6, 277.2, 246.9, 220.0], wave: 'triangle' },
+      { name: 'Asaase 99.5 Asakaa Drill', tempo: 210, notes: [146.8, 146.8, 174.6, 164.8, 130.8, 146.8, 196.0, 146.8], wave: 'sawtooth' },
+      { name: 'Hitz 103.9 Hiplife Throwback', tempo: 230, notes: [329.6, 392.0, 440.0, 392.0, 329.6, 261.6, 293.7, 329.6], wave: 'triangle' },
+      { name: 'Peace 104.3 Twi Groove', tempo: 270, notes: [261.6, 293.7, 329.6, 392.0, 523.3, 392.0, 329.6, 293.7], wave: 'sine' },
+      { name: 'Obonu 96.5 Ga Kpanlogo', tempo: 200, notes: [196.0, 246.9, 293.7, 392.0, 293.7, 392.0, 329.6, 246.9], wave: 'triangle' }
+    ];
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playSfx(type) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'cash') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.16);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else if (type === 'action') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.12);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        osc.start(now);
+        osc.stop(now + 0.14);
+      } else if (type === 'levelup') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.09);
+        osc.frequency.setValueAtTime(783.99, now + 0.18);
+        osc.frequency.setValueAtTime(1046.5, now + 0.27);
+        gain.gain.setValueAtTime(0.09, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        osc.start(now);
+        osc.stop(now + 0.45);
+      } else if (type === 'horn') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(310, now);
+        osc.frequency.setValueAtTime(370, now + 0.08);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.start(now);
+        osc.stop(now + 0.22);
+      } else if (type === 'warn') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(160, now + 0.25);
+        gain.gain.setValueAtTime(0.07, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      }
+    }
+
+    function startRadioLoop() {
+      if (radioIntervalId) clearInterval(radioIntervalId);
+      if (!soundEnabled) return;
+      const st = RADIO_STATIONS[radioStationIndex] || RADIO_STATIONS[0];
+      radioIntervalId = setInterval(() => {
+        if (!soundEnabled || !audioCtx || state.speed === 0) return;
+        const now = audioCtx.currentTime;
+        const freq = st.notes[radioStep % st.notes.length];
+        radioStep++;
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = st.wave;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.022, now);
+        gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.18);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.19);
+      }, st.tempo);
+    }
+
+    function toggleRadioSound() {
+      initAudio();
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('btnRadioToggle');
+      if (soundEnabled) {
+        btn.textContent = '🔊';
+        btn.classList.add('bg-emerald-600', 'text-white');
+        startRadioLoop();
+        showToast(`Tuned in to ${RADIO_STATIONS[radioStationIndex].name}! 🎶`, 'emerald');
+      } else {
+        btn.textContent = '🔇';
+        btn.classList.remove('bg-emerald-600', 'text-white');
+        if (radioIntervalId) clearInterval(radioIntervalId);
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    let canvasParticles = [];
+
+    function addCanvasParticle(text, color = '#fbbf24') {
+      canvasParticles.push({
+        x: state.playerPos.x,
+        y: state.playerPos.y - 0.04,
+        text,
+        color,
+        alpha: 1.0,
+        vy: -0.0008
+      });
+    }
+
+    function showToast(message, tone = 'amber') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      const borderMap = {
+        amber: 'border-amber-500/60 bg-slate-900/95 text-amber-200',
+        emerald: 'border-emerald-500/60 bg-slate-900/95 text-emerald-200',
+        rose: 'border-rose-500/60 bg-slate-900/95 text-rose-200',
+        sky: 'border-sky-500/60 bg-slate-900/95 text-sky-200'
+      };
+      el.className = `px-3.5 py-2.5 rounded-xl border shadow-xl text-xs font-medium flex items-center gap-2 transition-all duration-300 ${borderMap[tone] || borderMap.amber}`;
+      el.innerHTML = `<span class="text-sm">🇬🇭</span><span class="flex-1">${escapeHtml(message)}</span>`;
+      container.appendChild(el);
+
+      const ticker = document.getElementById('streetGistTicker');
+      if (ticker) ticker.textContent = message;
+
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(8px)';
+        setTimeout(() => el.remove(), 300);
+      }, 3400);
+    }
+
+    const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    let isPerformingAction = false;
+
+    function getDayOfWeekIndex() {
+      return state.day % 7;
+    }
+
+    function formatGameTime() {
+      const dayName = DAY_NAMES[getDayOfWeekIndex()];
+      const hrs24 = Math.floor(state.minutesOfDay / 60) % 24;
+      const mins = Math.floor(state.minutesOfDay % 60);
+      const ampm = hrs24 >= 12 ? 'PM' : 'AM';
+      const hrs12 = hrs24 % 12 === 0 ? 12 : hrs24 % 12;
+      return `${dayName} (Day ${state.day}), ${String(hrs12).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${ampm}`;
+    }
+
+    function getCurrentHouse() {
+      return HOUSES.find(h => h.id === state.houseId) || HOUSES[0];
+    }
+
+    function getCurrentCareer() {
+      return CAREERS.find(c => c.id === state.careerId) || CAREERS[0];
+    }
+
+    function calculateNetWorth() {
+      let total = state.cash;
+      const house = getCurrentHouse();
+      total += house.moveInFee;
+      state.ownedUtilities.forEach(uid => {
+        const u = UTILITIES.find(item => item.id === uid);
+        if (u) total += u.price;
+      });
+      state.ownedVehicles.forEach(vid => {
+        const v = VEHICLES.find(item => item.id === vid);
+        if (v) total += v.price;
+      });
+      state.ownedPlots.forEach(pid => {
+        const p = WATERFRONT_PLOTS.find(item => item.id === pid);
+        if (p) total += p.price;
+      });
+      return total;
+    }
+
+    function advanceMinutes(mins) {
+      state.minutesOfDay += mins;
+
+      const hours = mins / 60;
+      const fitnessLv = state.skills.fitness ? state.skills.fitness.level : 1;
+      const energySaveFactor = Math.max(0.65, 1 - (fitnessLv - 1) * 0.07);
+
+      state.meters.hunger = Math.max(0, state.meters.hunger - hours * 2.8);
+      state.meters.energy = Math.max(0, state.meters.energy - hours * 2.4 * energySaveFactor);
+      state.meters.fun = Math.max(0, state.meters.fun - hours * 1.9);
+      state.meters.social = Math.max(0, state.meters.social - hours * 1.7);
+      state.meters.hygiene = Math.max(0, state.meters.hygiene - hours * 2.0);
+      state.meters.bladder = Math.max(0, state.meters.bladder - hours * 3.1);
+
+      if (state.meters.bladder <= 2) {
+        state.meters.bladder = 45;
+        state.meters.hygiene = Math.max(0, state.meters.hygiene - 35);
+        state.meters.social = Math.max(0, state.meters.social - 15);
+        playSfx('warn');
+        showToast('Oh no! You had a bladder accident in Accra traffic! Hygiene dropped.', 'rose');
+      }
+      if (state.meters.energy <= 2) {
+        state.meters.energy = 35;
+        state.cash = Math.max(0, state.cash - 30);
+        playSfx('warn');
+        showToast('You passed out from exhaustion! A kind Trotro mate helped you home (-GH₵ 30).', 'rose');
+      }
+      if (state.meters.hunger <= 2) {
+        state.meters.hunger = 40;
+        state.cash = Math.max(0, state.cash - 20);
+        playSfx('warn');
+        showToast('Starving! Bought emergency roadside plantain chips & water (-GH₵ 20).', 'rose');
+      }
+
+      if (state.minutesOfDay >= 1440) {
+        state.minutesOfDay = state.minutesOfDay % 1440;
+        state.day += 1;
+        onNewDay();
+      }
+    }
+
+    function onNewDay() {
+      let plotIncome = 0;
+      state.ownedPlots.forEach(pid => {
+        const plot = WATERFRONT_PLOTS.find(p => p.id === pid);
+        if (plot) plotIncome += plot.dailyIncome;
+      });
+      if (plotIncome > 0) {
+        state.cash += plotIncome;
+        addCanvasParticle(`+GH₵ ${plotIncome} Plots`, '#10b981');
+        showToast(`Waterfront Plots paid GH₵ ${plotIncome} in daily dividends! 🏝️`, 'emerald');
+      }
+
+      if (state.ownedUtilities.includes('solar')) {
+        state.meters.fun = Math.min(100, state.meters.fun + 10);
+      }
+
+      const hasBackup = state.ownedUtilities.includes('generator') || state.ownedUtilities.includes('solar') || state.houseId === 'cantonments';
+      if (Math.random() < 0.28 && !hasBackup) {
+        state.ecgLightsOn = false;
+        showToast('⚡ ECG DUMSOR ALERT! Power is out in your area. Buy a Generator or Solar in Assets!', 'rose');
+      } else {
+        state.ecgLightsOn = true;
+      }
+
+      const dow = getDayOfWeekIndex();
+      if (dow === 0) {
+        state.rentPaidThisWeek = false;
+      }
+      if (dow === 6 && !state.rentPaidThisWeek) {
+        const house = getCurrentHouse();
+        if (state.cash >= house.rent) {
+          state.cash -= house.rent;
+          state.rentPaidThisWeek = true;
+          playSfx('cash');
+          showToast(`Saturday Rent paid! GH₵ ${house.rent} deducted for ${house.name}. 🏠`, 'amber');
+        } else {
+          state.rentPaidThisWeek = true;
+          state.meters.fun = Math.max(10, state.meters.fun - 25);
+          if (state.houseId !== 'madina') {
+            state.houseId = 'madina';
+            showToast('Landlord evicted you for missed Saturday rent! Moved back to Madina.', 'rose');
+          } else {
+            state.cash = 0;
+            showToast('Landlord seized your remaining Cedis for Saturday rent! Hustle up!', 'rose');
+          }
+        }
+      }
+
+      saveState();
+      renderAllUI();
+    }
+
+    function executeLocationAction(action) {
+      if (isPerformingAction) return;
+
+      if (action.reqSkill) {
+        const currentLv = state.skills[action.reqSkill.name]?.level || 1;
+        if (currentLv < action.reqSkill.level) {
+          playSfx('warn');
+          showToast(`Requires ${action.reqSkill.name.toUpperCase()} Level ${action.reqSkill.level}! Study at UG Legon first.`, 'rose');
+          return;
+        }
+      }
+
+      const cost = action.cost || 0;
+      if (state.cash < cost) {
+        playSfx('warn');
+        showToast(`Insufficient MoMo balance! You need GH₵ ${cost}.`, 'rose');
+        return;
+      }
+
+      isPerformingAction = true;
+      const overlay = document.getElementById('actionProgressOverlay');
+      const label = document.getElementById('actionProgressLabel');
+      const bar = document.getElementById('actionProgressBar');
+      overlay.classList.remove('hidden');
+      label.textContent = `${action.icon} ${action.name}...`;
+      bar.style.width = '0%';
+      playSfx('action');
+
+      let progress = 0;
+      const stepMs = 45;
+      const timer = setInterval(() => {
+        progress += 12;
+        bar.style.width = `${Math.min(100, progress)}%`;
+        if (progress >= 100) {
+          clearInterval(timer);
+          overlay.classList.add('hidden');
+          isPerformingAction = false;
+          applyActionOutcome(action);
+        }
+      }, stepMs);
+    }
+
+    function applyActionOutcome(action) {
+      if (action.cost) {
+        state.cash -= action.cost;
+      }
+
+      if (action.isCareerWork || action.isOvertimeWork) {
+        const career = getCurrentCareer();
+        const role = career.levels[state.careerLevel];
+        const multiplier = action.isOvertimeWork ? 1.45 : 1.0;
+        const pay = Math.round(role.pay * multiplier);
+        const xpGain = action.isOvertimeWork ? 38 : 25;
+
+        state.cash += pay;
+        state.careerXp = Math.min(100, state.careerXp + xpGain);
+        addSkillXp(career.reqSkill, 15);
+        playSfx('cash');
+        addCanvasParticle(`+GH₵ ${pay}`, '#10b981');
+        showToast(`${action.msg} Earned GH₵ ${pay} & +${xpGain} Career XP!`, 'emerald');
+      } else if (action.earn) {
+        const relevantSkillLv = action.skill ? (state.skills[action.skill]?.level || 1) : 1;
+        const bonus = Math.round(action.earn * (1 + (relevantSkillLv - 1) * 0.15));
+        state.cash += bonus;
+        playSfx('cash');
+        addCanvasParticle(`+GH₵ ${bonus}`, '#10b981');
+        showToast(`${action.msg} (+GH₵ ${bonus})`, 'emerald');
+      } else {
+        showToast(action.msg, 'amber');
+      }
+
+      if (action.effects) {
+        const house = getCurrentHouse();
+        for (const [k, delta] of Object.entries(action.effects)) {
+          let adjusted = delta;
+          if (k === 'energy' && delta > 0 && state.currentLocationId === 'home') {
+            adjusted = delta * house.energyBonus;
+            if (!state.ecgLightsOn && !state.ownedUtilities.includes('generator') && !state.ownedUtilities.includes('solar')) {
+              adjusted *= 0.65;
+            }
+          }
+          if (k === 'hygiene' && delta > 0 && state.ownedUtilities.includes('polytank')) {
+            adjusted += 15;
+          }
+          state.meters[k] = Math.max(0, Math.min(100, (state.meters[k] || 0) + adjusted));
+        }
+      }
+
+      if (action.skill && action.skillXp) {
+        addSkillXp(action.skill, action.skillXp);
+      }
+
+      advanceMinutes(action.timeMins || 30);
+      saveState();
+      renderAllUI();
+    }
+
+    function addSkillXp(skillId, amount) {
+      if (!state.skills[skillId]) {
+        state.skills[skillId] = { level: 1, xp: 0 };
+      }
+      const sk = state.skills[skillId];
+      if (sk.level >= 5) return;
+      sk.xp += amount;
+      const needed = sk.level * 100;
+      if (sk.xp >= needed) {
+        sk.xp -= needed;
+        sk.level += 1;
+        playSfx('levelup');
+        const meta = SKILLS_META.find(s => s.id === skillId);
+        addCanvasParticle(`${meta ? meta.name : skillId} Lv.${sk.level}!`, '#38bdf8');
+        showToast(`🎓 Skill Level Up! ${meta ? meta.name : skillId} is now Level ${sk.level}!`, 'sky');
+      }
+    }
+
+    function travelToLocation(locId) {
+      const targetLoc = LOCATIONS.find(l => l.id === locId);
+      if (!targetLoc) return;
+
+      if (state.currentLocationId === locId && !state.targetPos) {
+        showToast(`You are already at ${targetLoc.name}!`, 'sky');
+        return;
+      }
+
+      const hasOwnCar = state.ownedVehicles.length > 0;
+      const fareMap = {
+        walk: { cost: 0, time: 35, label: 'Walking' },
+        trotro: { cost: 8, time: 20, label: 'Trotro' },
+        okada: { cost: 25, time: 10, label: 'Okada' },
+        bolt: { cost: hasOwnCar ? 0 : 60, time: 12, label: hasOwnCar ? 'Personal Whip' : 'Bolt Cab' }
+      };
+
+      const mode = fareMap[state.transportMode] || fareMap.trotro;
+      if (state.cash < mode.cost) {
+        state.transportMode = 'walk';
+        showToast('Not enough cash for fare — switched to Walking (Footwagen)!', 'amber');
+      } else if (mode.cost > 0) {
+        state.cash -= mode.cost;
+        addCanvasParticle(`-GH₵ ${mode.cost} ${mode.label}`, '#fbbf24');
+      }
+
+      if (state.transportMode === 'trotro' || state.transportMode === 'okada') {
+        playSfx('horn');
+      }
+
+      state.targetPos = { x: targetLoc.x, y: targetLoc.y };
+      state.pendingLocationId = targetLoc.id;
+      advanceMinutes(mode.time);
+      renderAllUI();
+    }
+
+    const canvas = document.getElementById('accraCanvas');
+    const ctx = canvas.getContext('2d');
+    const keysPressed = {};
+
+    const cityVehicles = [
+      { x: 0.1, y: 0.50, vx: 0.0018, vy: 0, color: '#2563eb', label: '🚐 Trotro' },
+      { x: 0.85, y: 0.54, vx: -0.0022, vy: 0, color: '#f59e0b', label: '🚕 Taxi' },
+      { x: 0.48, y: 0.15, vx: 0, vy: 0.0020, color: '#ef4444', label: '🏍️ Okada' }
+    ];
+
+    function resizeCanvas() {
+      const container = document.getElementById('canvasContainer');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      drawAccraWorld();
+    }
+
+    function updateCanvasSimulation() {
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!w || !h) return;
+
+      let dx = 0;
+      let dy = 0;
+      if (keysPressed['ArrowUp'] || keysPressed['KeyW'] || keysPressed['dpadUp']) dy -= 1;
+      if (keysPressed['ArrowDown'] || keysPressed['KeyS'] || keysPressed['dpadDown']) dy += 1;
+      if (keysPressed['ArrowLeft'] || keysPressed['KeyA'] || keysPressed['dpadLeft']) dx -= 1;
+      if (keysPressed['ArrowRight'] || keysPressed['KeyD'] || keysPressed['dpadRight']) dx += 1;
+
+      if (dx !== 0 || dy !== 0) {
+        state.targetPos = null;
+        const len = Math.hypot(dx, dy);
+        const speed = 0.0045;
+        state.playerPos.x = Math.max(0.05, Math.min(0.95, state.playerPos.x + (dx / len) * speed));
+        state.playerPos.y = Math.max(0.08, Math.min(0.88, state.playerPos.y + (dy / len) * speed));
+
+        for (const loc of LOCATIONS) {
+          const dist = Math.hypot(state.playerPos.x - loc.x, state.playerPos.y - loc.y);
+          if (dist < 0.055 && state.currentLocationId !== loc.id) {
+            state.currentLocationId = loc.id;
+            playSfx('action');
+            showToast(`Arrived at ${loc.name} (${loc.district})`, 'emerald');
+            renderAllUI();
+            break;
+          }
+        }
+      } else if (state.targetPos) {
+        const tx = state.targetPos.x - state.playerPos.x;
+        const ty = state.targetPos.y - state.playerPos.y;
+        const dist = Math.hypot(tx, ty);
+        const moveStep = state.transportMode === 'walk' ? 0.006 : 0.014;
+        if (dist <= moveStep) {
+          state.playerPos.x = state.targetPos.x;
+          state.playerPos.y = state.targetPos.y;
+          state.targetPos = null;
+          if (state.pendingLocationId) {
+            state.currentLocationId = state.pendingLocationId;
+            state.pendingLocationId = null;
+            const arrived = LOCATIONS.find(l => l.id === state.currentLocationId);
+            if (arrived) {
+              showToast(`Arrived at ${arrived.name}!`, 'emerald');
+            }
+            renderAllUI();
+          }
+        } else {
+          state.playerPos.x += (tx / dist) * moveStep;
+          state.playerPos.y += (ty / dist) * moveStep;
+        }
+      }
+
+      cityVehicles.forEach(v => {
+        v.x += v.vx;
+        v.y += v.vy;
+        if (v.x > 1.05) v.x = -0.05;
+        if (v.x < -0.05) v.x = 1.05;
+        if (v.y > 0.90) v.y = 0.05;
+      });
+
+      for (let i = canvasParticles.length - 1; i >= 0; i--) {
+        canvasParticles[i].y += canvasParticles[i].vy;
+        canvasParticles[i].alpha -= 0.018;
+        if (canvasParticles[i].alpha <= 0) {
+          canvasParticles.splice(i, 1);
+        }
+      }
+    }
+
+    function drawAccraWorld() {
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!w || !h) return;
+
+      const hour = Math.floor(state.minutesOfDay / 60);
+      const isNight = hour >= 19 || hour < 6;
+      ctx.fillStyle = isNight ? '#09101d' : '#0f291e';
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.strokeStyle = isNight ? 'rgba(51, 65, 85, 0.25)' : 'rgba(16, 185, 129, 0.12)';
+      ctx.lineWidth = 1;
+      const gridStep = 40;
+      for (let gx = 0; gx < w; gx += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(gx, 0);
+        ctx.lineTo(gx, h);
+        ctx.stroke();
+      }
+      for (let gy = 0; gy < h; gy += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(0, gy);
+        ctx.lineTo(w, gy);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = isNight ? '#082f49' : '#0369a1';
+      ctx.beginPath();
+      ctx.moveTo(0, h * 0.89);
+      ctx.quadraticCurveTo(w * 0.5, h * 0.83, w, h * 0.86);
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = '#fcd34d';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, h * 0.89);
+      ctx.quadraticCurveTo(w * 0.5, h * 0.83, w, h * 0.86);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '600 10px Inter, sans-serif';
+      ctx.fillText('🌊 GULF OF GUINEA • LABADI & JAMESTOWN COAST', 14, h - 10);
+
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 18;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0, h * 0.52);
+      ctx.lineTo(w, h * 0.52);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(w * 0.48, 0);
+      ctx.lineTo(w * 0.48, h * 0.85);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      ctx.moveTo(0, h * 0.52);
+      ctx.lineTo(w, h * 0.52);
+      ctx.moveTo(w * 0.48, 0);
+      ctx.lineTo(w * 0.48, h * 0.85);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      cityVehicles.forEach(v => {
+        const vx = v.x * w;
+        const vy = v.y * h;
+        ctx.fillStyle = v.color;
+        ctx.beginPath();
+        ctx.roundRect(vx - 14, vy - 7, 28, 14, 4);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 9px Inter, sans-serif';
+        ctx.fillText(v.label, vx - 18, vy - 10);
+      });
+
+      BILLBOARDS.forEach(bb => {
+        const isRented = state.rentedBillboards.includes(bb.id);
+        const bx = bb.mapPos.x * w;
+        const by = bb.mapPos.y * h;
+        if (isRented) {
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(bx - 58, by - 22, 116, 22, 5);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#fde047';
+          ctx.font = 'bold 8.5px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          const msg = (state.billboardMessage || 'ACCRA LIFE').slice(0, 22);
+          ctx.fillText(`🪧 ${msg}`, bx, by - 8);
+          ctx.textAlign = 'left';
+        }
+      });
+
+      LOCATIONS.forEach(loc => {
+        const lx = loc.x * w;
+        const ly = loc.y * h;
+        const isCurrent = state.currentLocationId === loc.id;
+
+        if (isCurrent) {
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(lx, ly, 24, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.beginPath();
+        ctx.roundRect(lx - 18, ly - 15, 36, 34, 9);
+        ctx.fill();
+
+        ctx.fillStyle = loc.color;
+        ctx.beginPath();
+        ctx.roundRect(lx - 17, ly - 17, 34, 32, 8);
+        ctx.fill();
+
+        ctx.strokeStyle = isCurrent ? '#ffffff' : 'rgba(255,255,255,0.35)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(loc.icon, lx, ly - 1);
+
+        ctx.font = 'bold 10px Inter, sans-serif';
+        const labelWidth = ctx.measureText(loc.name).width + 10;
+        ctx.fillStyle = isCurrent ? '#fbbf24' : 'rgba(15, 23, 42, 0.88)';
+        ctx.beginPath();
+        ctx.roundRect(lx - labelWidth / 2, ly + 18, labelWidth, 16, 4);
+        ctx.fill();
+
+        ctx.fillStyle = isCurrent ? '#0f172a' : '#f8fafc';
+        ctx.fillText(loc.name, lx, ly + 26);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+      });
+
+      SIMULATED_PLAYERS.forEach((sim, idx) => {
+        const loc = LOCATIONS.find(l => l.id === sim.locId) || LOCATIONS[0];
+        const angle = (Date.now() / 1200 + idx * 1.4) % (Math.PI * 2);
+        const sx = loc.x * w + Math.cos(angle) * 26;
+        const sy = loc.y * h + Math.sin(angle) * 18;
+
+        ctx.fillStyle = sim.color;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(sim.emoji, sx, sy + 3);
+        ctx.textAlign = 'left';
+      });
+
+      const px = state.playerPos.x * w;
+      const py = state.playerPos.y * h;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.beginPath();
+      ctx.ellipse(px, py + 12, 12, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = state.avatarColor || '#10b981';
+      ctx.beginPath();
+      ctx.arc(px, py, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(state.avatarEmoji || '😎', px, py + 1);
+
+      const bobOffset = Math.sin(Date.now() / 240) * 3;
+      const plumbobY = py - 24 + bobOffset;
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath();
+      ctx.moveTo(px, plumbobY - 8);
+      ctx.lineTo(px + 6, plumbobY);
+      ctx.lineTo(px, plumbobY + 8);
+      ctx.lineTo(px - 6, plumbobY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#166534';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      canvasParticles.forEach(pt => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, pt.alpha);
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.fillStyle = pt.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(pt.text, pt.x * w, pt.y * h);
+        ctx.restore();
+      });
+
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    function updateMeterBar(idSuffix, value) {
+      const rounded = Math.round(value);
+      const valEl = document.getElementById(`val${idSuffix}`);
+      const barEl = document.getElementById(`bar${idSuffix}`);
+      if (!valEl || !barEl) return;
+
+      valEl.textContent = `${rounded}%`;
+      barEl.style.width = `${rounded}%`;
+
+      let colorClass = 'bg-emerald-500';
+      let textClass = 'text-emerald-400';
+      if (rounded < 30) {
+        colorClass = 'bg-rose-500';
+        textClass = 'text-rose-400';
+      } else if (rounded < 60) {
+        colorClass = 'bg-amber-400';
+        textClass = 'text-amber-300';
+      }
+      barEl.className = `meter-bar h-full rounded-full ${colorClass}`;
+      valEl.className = `font-mono font-bold ${textClass}`;
+    }
+
+    function getPlayerRankTitle(netWorth) {
+      if (netWorth >= 25000) return 'Cantonments Tycoon 👑';
+      if (netWorth >= 10000) return 'East Legon Big Boss 🥂';
+      if (netWorth >= 3500) return 'Osu Young Executive ✨';
+      if (netWorth >= 1200) return 'Accra Rising Star 🚀';
+      return 'Chale Hustler 🔥';
+    }
+
+    function renderHUD() {
+      const career = getCurrentCareer();
+      const role = career.levels[state.careerLevel];
+      const currentLoc = LOCATIONS.find(l => l.id === state.currentLocationId) || LOCATIONS[0];
+      const house = getCurrentHouse();
+      const netWorth = calculateNetWorth();
+
+      document.getElementById('hudPlayerName').textContent = state.playerName;
+      document.getElementById('hudAvatarBadge').textContent = state.avatarEmoji;
+      document.getElementById('hudAvatarBadge').style.background = state.avatarColor;
+      document.getElementById('hudTitleBadge').textContent = getPlayerRankTitle(netWorth);
+      document.getElementById('hudJobTitle').textContent = role.title;
+      document.getElementById('hudLocationName').textContent = currentLoc.name;
+      document.getElementById('hudCash').textContent = `GH₵ ${state.cash.toLocaleString()}`;
+      document.getElementById('netWorthDisplay').textContent = `Net Worth: GH₵ ${netWorth.toLocaleString()}`;
+
+      const hr = Math.floor(state.minutesOfDay / 60);
+      document.getElementById('hudDayIcon').textContent = (hr >= 6 && hr < 18) ? '☀️' : '🌙';
+      document.getElementById('hudDayTime').textContent = formatGameTime();
+
+      const dow = getDayOfWeekIndex();
+      const daysUntilSat = (6 - dow + 7) % 7;
+      const rentLabel = daysUntilSat === 0
+        ? `Rent Day! GH₵ ${house.rent} (Saturday)`
+        : `Rent: GH₵ ${house.rent} due Sat (${daysUntilSat}d)`;
+      document.getElementById('hudRentCountdown').textContent = rentLabel;
+
+      const ecgDot = document.getElementById('ecgStatusDot');
+      const ecgText = document.getElementById('ecgStatusText');
+      if (state.ecgLightsOn) {
+        ecgDot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        ecgText.textContent = 'ECG: Lights On';
+      } else if (state.ownedUtilities.includes('solar') || state.ownedUtilities.includes('generator')) {
+        ecgDot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        ecgText.textContent = 'ECG Off (Backup On ⚡)';
+      } else {
+        ecgDot.className = 'w-2 h-2 rounded-full bg-rose-500 animate-ping';
+        ecgText.textContent = 'ECG: DUMSOR (Outage!)';
+      }
+
+      updateMeterBar('Hunger', state.meters.hunger);
+      updateMeterBar('Energy', state.meters.energy);
+      updateMeterBar('Fun', state.meters.fun);
+      updateMeterBar('Social', state.meters.social);
+      updateMeterBar('Hygiene', state.meters.hygiene);
+      updateMeterBar('Bladder', state.meters.bladder);
+
+      const hasCar = state.ownedVehicles.length > 0;
+      const modeNames = {
+        walk: '🚶 Walking (Free)',
+        trotro: '🚐 Trotro (GH₵ 8/trip)',
+        okada: '🏍️ Okada (GH₵ 25/trip)',
+        bolt: hasCar ? '🚘 Personal Whip (Free!)' : '🚕 Bolt Cab (GH₵ 60/trip)'
+      };
+      document.getElementById('mapTransportStatus').textContent = `Mode: ${modeNames[state.transportMode]}`;
+
+      document.querySelectorAll('.transport-btn').forEach(btn => {
+        const m = btn.getAttribute('data-transport');
+        if (m === state.transportMode) {
+          btn.className = 'transport-btn px-2 py-1 rounded-lg text-[11px] font-semibold bg-amber-500 text-slate-950 transition';
+        } else {
+          btn.className = 'transport-btn px-2 py-1 rounded-lg text-[11px] font-semibold text-slate-300 hover:bg-slate-800 transition';
+        }
+      });
+    }
+
+    function renderQuickLandmarkStrip() {
+      const strip = document.getElementById('landmarkQuickStrip');
+      strip.innerHTML = '';
+      LOCATIONS.forEach(loc => {
+        const active = state.currentLocationId === loc.id;
+        const btn = document.createElement('button');
+        btn.className = `px-2.5 py-1 rounded-xl text-xs font-semibold shrink-0 flex items-center gap-1.5 border transition ${
+          active
+            ? 'bg-amber-500 text-slate-950 border-amber-400 shadow'
+            : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-800'
+        }`;
+        btn.innerHTML = `<span>${loc.icon}</span><span>${loc.name}</span>`;
+        btn.addEventListener('click', () => travelToLocation(loc.id));
+        strip.appendChild(btn);
+      });
+    }
+
+    function renderCurrentLocationPanel() {
+      const loc = LOCATIONS.find(l => l.id === state.currentLocationId) || LOCATIONS[0];
+      const house = getCurrentHouse();
+
+      document.getElementById('locIconBox').textContent = loc.icon;
+      document.getElementById('locTitle').textContent = loc.id === 'home' ? house.name : loc.name;
+      document.getElementById('locDistrictTag').textContent = loc.district;
+      document.getElementById('locDescription').textContent = loc.id === 'home' ? house.desc : loc.desc;
+
+      const simsHere = SIMULATED_PLAYERS.filter(p => p.locId === loc.id).length + 2;
+      document.getElementById('locPlayersPresent').textContent = `👥 ${simsHere} Accra sims here`;
+
+      const grid = document.getElementById('locationActionsGrid');
+      grid.innerHTML = '';
+
+      const career = getCurrentCareer();
+      const role = career.levels[state.careerLevel];
+
+      loc.actions.forEach(act => {
+        const card = document.createElement('button');
+        card.className = 'text-left bg-slate-950 hover:bg-slate-800/90 border border-slate-800 hover:border-amber-500/50 rounded-xl p-3 transition flex items-start justify-between gap-2 group';
+
+        let badgeHtml = '';
+        if (act.isCareerWork) {
+          badgeHtml = `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[11px] shrink-0">+GH₵ ${role.pay}</span>`;
+        } else if (act.isOvertimeWork) {
+          badgeHtml = `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[11px] shrink-0">+GH₵ ${Math.round(role.pay * 1.45)}</span>`;
+        } else if (act.earn) {
+          badgeHtml = `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[11px] shrink-0">+GH₵ ${act.earn}</span>`;
+        } else if (act.cost > 0) {
+          badgeHtml = `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[11px] shrink-0">GH₵ ${act.cost}</span>`;
+        } else {
+          badgeHtml = `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-semibold text-[11px] shrink-0">Free</span>`;
+        }
+
+        const effectTags = [];
+        if (act.effects) {
+          for (const [k, v] of Object.entries(act.effects)) {
+            const sign = v > 0 ? '+' : '';
+            effectTags.push(`${k.charAt(0).toUpperCase() + k.slice(1)} ${sign}${v}`);
+          }
+        }
+        if (act.skill) {
+          effectTags.push(`+${act.skillXp} ${act.skill.toUpperCase()} XP`);
+        }
+
+        card.innerHTML = `
+          <div class="flex items-start gap-2.5">
+            <span class="text-xl mt-0.5 group-hover:scale-110 transition">${act.icon}</span>
+            <div>
+              <div class="font-semibold text-xs text-white group-hover:text-amber-300 transition">${act.name}</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">${effectTags.slice(0, 3).join(' • ')}</div>
+            </div>
+          </div>
+          ${badgeHtml}
+        `;
+        card.addEventListener('click', () => executeLocationAction(act));
+        grid.appendChild(card);
+      });
+    }
+
+    function renderCareersTab() {
+      const career = getCurrentCareer();
+      const role = career.levels[state.careerLevel];
+      const nextRole = career.levels[state.careerLevel + 1];
+
+      document.getElementById('careerTierBadge').textContent = `Level ${state.careerLevel + 1} / 5`;
+      document.getElementById('currentCareerName').textContent = `${career.icon} ${career.name}`;
+      document.getElementById('currentRoleTitle').innerHTML = `Role: <strong class="text-amber-300">${role.title}</strong> • Pay: <strong class="text-emerald-400">GH₵ ${role.pay} / shift</strong>`;
+      document.getElementById('careerXpText').textContent = `${state.careerXp} / 100 XP`;
+      document.getElementById('careerXpBar').style.width = `${state.careerXp}%`;
+      document.getElementById('btnWorkShiftNow').textContent = `⚡ Work Shift Now (+GH₵ ${role.pay})`;
+
+      if (nextRole) {
+        const skillMeta = SKILLS_META.find(s => s.id === career.reqSkill);
+        document.getElementById('careerPromoReq').textContent = `Next: ${nextRole.title} (GH₵ ${nextRole.pay}/shift • Requires ${skillMeta ? skillMeta.name : career.reqSkill} Lv.${nextRole.reqLv} & 100 XP)`;
+      } else {
+        document.getElementById('careerPromoReq').textContent = `🏆 Maximum Career Level Reached! You are an Accra Boss.`;
+      }
+
+      const shList = document.getElementById('sideHustlesList');
+      shList.innerHTML = '';
+      SIDE_HUSTLES.forEach(sh => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between text-left transition';
+        btn.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="text-lg">${sh.icon}</span>
+            <div>
+              <div class="text-xs font-semibold text-white">${sh.name}</div>
+              <div class="text-[10px] text-slate-400">-${sh.energyCost} Energy • +${sh.skill.toUpperCase()} XP</div>
+            </div>
+          </div>
+          <span class="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold text-xs">+GH₵ ${sh.earn}</span>
+        `;
+        btn.addEventListener('click', () => {
+          executeLocationAction({
+            name: sh.name,
+            icon: sh.icon,
+            earn: sh.earn,
+            timeMins: sh.timeMins,
+            effects: { energy: -sh.energyCost, hunger: -8 },
+            skill: sh.skill,
+            skillXp: 15,
+            msg: `Completed ${sh.name}!`
+          });
+        });
+        shList.appendChild(btn);
+      });
+
+      const cList = document.getElementById('careersList');
+      cList.innerHTML = '';
+      CAREERS.forEach(c => {
+        const isCurrent = c.id === state.careerId;
+        const div = document.createElement('div');
+        div.className = `p-2.5 rounded-xl border flex items-center justify-between gap-2 ${
+          isCurrent ? 'bg-amber-500/10 border-amber-500/50' : 'bg-slate-950 border-slate-800'
+        }`;
+        div.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="text-lg">${c.icon}</span>
+            <div>
+              <div class="text-xs font-bold text-white">${c.name}</div>
+              <div class="text-[10px] text-slate-400">Entry: GH₵ ${c.levels[0].pay} → Max: GH₵ ${c.levels[4].pay}/shift</div>
+            </div>
+          </div>
+        `;
+        const switchBtn = document.createElement('button');
+        switchBtn.className = isCurrent
+          ? 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-[11px]'
+          : 'px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-[11px]';
+        switchBtn.textContent = isCurrent ? 'Active' : 'Join';
+        if (!isCurrent) {
+          switchBtn.addEventListener('click', () => {
+            state.careerId = c.id;
+            state.careerLevel = 0;
+            state.careerXp = 0;
+            playSfx('action');
+            showToast(`Started new career in ${c.name}!`, 'emerald');
+            saveState();
+            renderAllUI();
+          });
+        }
+        div.appendChild(switchBtn);
+        cList.appendChild(div);
+      });
+    }
+
+    function renderSkillsTab() {
+      const list = document.getElementById('skillsList');
+      list.innerHTML = '';
+      SKILLS_META.forEach(meta => {
+        const sk = state.skills[meta.id] || { level: 1, xp: 0 };
+        const needed = sk.level * 100;
+        const pct = sk.level >= 5 ? 100 : Math.min(100, Math.round((sk.xp / needed) * 100));
+
+        const item = document.createElement('div');
+        item.className = 'bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2';
+        item.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">${meta.icon}</span>
+              <div>
+                <div class="text-xs font-bold text-white">${meta.name}</div>
+                <div class="text-[10px] text-slate-400">${meta.desc}</div>
+              </div>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold text-xs">Lv. ${sk.level} / 5</span>
+          </div>
+          <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div class="h-full bg-sky-400 transition-all duration-300" style="width: ${pct}%"></div>
+          </div>
+        `;
+
+        const trainBtn = document.createElement('button');
+        trainBtn.className = 'w-full py-1.5 rounded-lg bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-slate-200 font-semibold text-xs transition';
+        trainBtn.textContent = sk.level >= 5 ? 'Mastered (Max Level)' : `📚 Take Legon Course (GH₵ ${meta.studyCost} • +40 XP)`;
+        trainBtn.disabled = sk.level >= 5;
+        trainBtn.addEventListener('click', () => {
+          executeLocationAction({
+            name: `Study ${meta.name}`,
+            icon: meta.icon,
+            cost: meta.studyCost,
+            timeMins: 60,
+            effects: { energy: -12, fun: -4 },
+            skill: meta.id,
+            skillXp: 40,
+            msg: `Completed ${meta.name} workshop!`
+          });
+        });
+
+        item.appendChild(trainBtn);
+        list.appendChild(item);
+      });
+    }
+
+    function renderLifestyleTab() {
+      const currentHouse = getCurrentHouse();
+      document.getElementById('rentStatusDetail').textContent = `Current Home: ${currentHouse.name} (GH₵ ${currentHouse.rent}/Sat)`;
+
+      const hList = document.getElementById('housingList');
+      hList.innerHTML = '';
+      HOUSES.forEach(h => {
+        const isCurrent = h.id === state.houseId;
+        const div = document.createElement('div');
+        div.className = `p-3 rounded-xl border ${isCurrent ? 'bg-emerald-950/30 border-emerald-500/50' : 'bg-slate-950 border-slate-800'} flex items-center justify-between gap-2`;
+        div.innerHTML = `
+          <div>
+            <div class="text-xs font-bold text-white">${h.name}</div>
+            <div class="text-[10px] text-slate-400">${h.desc}</div>
+            <div class="text-[11px] text-amber-300 font-semibold mt-1">Rent: GH₵ ${h.rent}/wk • Move-in: GH₵ ${h.moveInFee}</div>
+          </div>
+        `;
+        const btn = document.createElement('button');
+        btn.className = isCurrent
+          ? 'px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs shrink-0'
+          : 'px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-200 font-bold text-xs shrink-0 transition';
+        btn.textContent = isCurrent ? 'Current Home' : `Move In (₵${h.moveInFee})`;
+        if (!isCurrent) {
+          btn.addEventListener('click', () => {
+            if (state.cash < h.moveInFee) {
+              playSfx('warn');
+              showToast(`Need GH₵ ${h.moveInFee} security deposit to move into ${h.name}!`, 'rose');
+              return;
+            }
+            state.cash -= h.moveInFee;
+            state.houseId = h.id;
+            playSfx('levelup');
+            showToast(`🏡 Congrats! Moved into ${h.name}!`, 'emerald');
+            saveState();
+            renderAllUI();
+          });
+        }
+        div.appendChild(btn);
+        hList.appendChild(div);
+      });
+
+      const uList = document.getElementById('utilitiesList');
+      uList.innerHTML = '';
+      UTILITIES.forEach(u => {
+        const owned = state.ownedUtilities.includes(u.id);
+        const div = document.createElement('div');
+        div.className = 'p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2';
+        div.innerHTML = `
+          <div>
+            <div class="text-xs font-bold text-white">${u.name}</div>
+            <div class="text-[10px] text-slate-400">${u.desc}</div>
+          </div>
+        `;
+        const btn = document.createElement('button');
+        btn.className = owned
+          ? 'px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold text-xs shrink-0'
+          : 'px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0';
+        btn.textContent = owned ? 'Installed ✓' : `GH₵ ${u.price}`;
+        if (!owned) {
+          btn.addEventListener('click', () => {
+            if (state.cash < u.price) {
+              playSfx('warn');
+              showToast(`Need GH₵ ${u.price} for ${u.name}!`, 'rose');
+              return;
+            }
+            state.cash -= u.price;
+            state.ownedUtilities.push(u.id);
+            state.ecgLightsOn = true;
+            playSfx('levelup');
+            showToast(`Installed ${u.name} at home!`, 'emerald');
+            saveState();
+            renderAllUI();
+          });
+        }
+        div.appendChild(btn);
+        uList.appendChild(div);
+      });
+
+      const vList = document.getElementById('vehiclesList');
+      vList.innerHTML = '';
+      VEHICLES.forEach(v => {
+        const owned = state.ownedVehicles.includes(v.id);
+        const div = document.createElement('div');
+        div.className = 'p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2';
+        div.innerHTML = `
+          <div>
+            <div class="text-xs font-bold text-white">🚘 ${v.name}</div>
+            <div class="text-[10px] text-slate-400">${v.desc}</div>
+          </div>
+        `;
+        const btn = document.createElement('button');
+        btn.className = owned
+          ? 'px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold text-xs shrink-0'
+          : 'px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0';
+        btn.textContent = owned ? 'In Garage ✓' : `GH₵ ${v.price.toLocaleString()}`;
+        if (!owned) {
+          btn.addEventListener('click', () => {
+            if (state.cash < v.price) {
+              playSfx('warn');
+              showToast(`Need GH₵ ${v.price.toLocaleString()} to buy ${v.name}!`, 'rose');
+              return;
+            }
+            state.cash -= v.price;
+            state.ownedVehicles.push(v.id);
+            state.transportMode = 'bolt';
+            playSfx('levelup');
+            showToast(`🚘 Bought ${v.name}! Zero transport fares across Accra!`, 'emerald');
+            saveState();
+            renderAllUI();
+          });
+        }
+        div.appendChild(btn);
+        vList.appendChild(div);
+      });
+    }
+
+    function renderBillboardsTab() {
+      const bbList = document.getElementById('billboardsList');
+      bbList.innerHTML = '';
+      BILLBOARDS.forEach(bb => {
+        const rented = state.rentedBillboards.includes(bb.id);
+        const div = document.createElement('div');
+        div.className = 'p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2';
+        div.innerHTML = `
+          <div>
+            <div class="text-xs font-bold text-white">🪧 ${bb.name}</div>
+            <div class="text-[10px] text-slate-400">Displays your custom message live on the Accra map • +${bb.cloutBonus} Social Clout</div>
+          </div>
+        `;
+        const btn = document.createElement('button');
+        btn.className = rented
+          ? 'px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold text-xs shrink-0'
+          : 'px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0';
+        btn.textContent = rented ? 'Live on Map ✓' : `Rent (₵${bb.rentPrice})`;
+        if (!rented) {
+          btn.addEventListener('click', () => {
+            if (state.cash < bb.rentPrice) {
+              playSfx('warn');
+              showToast(`Need GH₵ ${bb.rentPrice} to rent ${bb.name}!`, 'rose');
+              return;
+            }
+            state.cash -= bb.rentPrice;
+            state.rentedBillboards.push(bb.id);
+            state.meters.social = Math.min(100, state.meters.social + 35);
+            state.meters.fun = Math.min(100, state.meters.fun + 25);
+            playSfx('levelup');
+            showToast(`🪧 Your billboard is now LIVE at ${bb.name}! Check the map!`, 'emerald');
+            saveState();
+            renderAllUI();
+          });
+        }
+        div.appendChild(btn);
+        bbList.appendChild(div);
+      });
+
+      const pList = document.getElementById('plotsList');
+      pList.innerHTML = '';
+      WATERFRONT_PLOTS.forEach(pl => {
+        const owned = state.ownedPlots.includes(pl.id);
+        const div = document.createElement('div');
+        div.className = 'p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2';
+        div.innerHTML = `
+          <div>
+            <div class="text-xs font-bold text-white">🏝️ ${pl.name}</div>
+            <div class="text-[10px] text-emerald-400 font-semibold">${pl.desc}</div>
+          </div>
+        `;
+        const btn = document.createElement('button');
+        btn.className = owned
+          ? 'px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold text-xs shrink-0'
+          : 'px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shrink-0';
+        btn.textContent = owned ? 'Owned ✓' : `Buy (₵${pl.price.toLocaleString()})`;
+        if (!owned) {
+          btn.addEventListener('click', () => {
+            if (state.cash < pl.price) {
+              playSfx('warn');
+              showToast(`Need GH₵ ${pl.price.toLocaleString()} to acquire ${pl.name}!`, 'rose');
+              return;
+            }
+            state.cash -= pl.price;
+            state.ownedPlots.push(pl.id);
+            playSfx('levelup');
+            showToast(`🏝️ Acquired ${pl.name}! Passive daily income unlocked!`, 'emerald');
+            saveState();
+            renderAllUI();
+          });
+        }
+        div.appendChild(btn);
+        pList.appendChild(div);
+      });
+    }
+
+    function renderSocialTab() {
+      const npcList = document.getElementById('npcPlayersList');
+      npcList.innerHTML = '';
+      SIMULATED_PLAYERS.forEach(sim => {
+        const loc = LOCATIONS.find(l => l.id === sim.locId) || LOCATIONS[0];
+        const relScore = state.friends[sim.id] || 10;
+        const row = document.createElement('div');
+        row.className = 'p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2';
+        row.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg flex items-center justify-center text-base" style="background:${sim.color}33; border:1px solid ${sim.color}">${sim.emoji}</span>
+            <div>
+              <div class="text-xs font-bold text-white">${sim.name} <span class="text-[10px] text-amber-300 font-normal">• ${sim.title}</span></div>
+              <div class="text-[10px] text-slate-400">📍 ${loc.name} • Bond: ${relScore}%</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button data-chat-sim="${sim.id}" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold">Chat</button>
+            <button data-momo-sim="${sim.id}" class="px-2 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 text-[11px] font-bold transition">Send ₵50</button>
+          </div>
+        `;
+        row.querySelector(`[data-chat-sim="${sim.id}"]`).addEventListener('click', () => {
+          state.friends[sim.id] = Math.min(100, (state.friends[sim.id] || 10) + 15);
+          state.meters.social = Math.min(100, state.meters.social + 18);
+          addSkillXp('charisma', 10);
+          appendChatMessage(state.playerName, `Yo @${sim.name}, how far? Chilling at ${loc.name}?`, true);
+          setTimeout(() => {
+            appendChatMessage(sim.name, `Chale @${state.playerName}! Everything stew! Let's link up soon 🔥`, false);
+          }, 600);
+          playSfx('action');
+          saveState();
+          renderAllUI();
+        });
+
+        row.querySelector(`[data-momo-sim="${sim.id}"]`).addEventListener('click', () => {
+          if (state.cash < 50) {
+            playSfx('warn');
+            showToast('Need at least GH₵ 50 in your MoMo wallet!', 'rose');
+            return;
+          }
+          state.cash -= 50;
+          state.friends[sim.id] = Math.min(100, (state.friends[sim.id] || 10) + 30);
+          state.meters.social = Math.min(100, state.meters.social + 25);
+          playSfx('cash');
+          appendChatMessage(sim.name, `Eii @${state.playerName} just sent me GH₵ 50 MoMo!! God bless your hustle chale 🙌💸`, false);
+          showToast(`Sent GH₵ 50 MoMo to ${sim.name}!`, 'emerald');
+          saveState();
+          renderAllUI();
+        });
+
+        npcList.appendChild(row);
+      });
+
+      const lbList = document.getElementById('leaderboardList');
+      lbList.innerHTML = '';
+      const myNetWorth = calculateNetWorth();
+      const entries = [
+        ...SIMULATED_PLAYERS.map(s => ({ name: s.name, wealth: s.wealth, isMe: false, emoji: s.emoji })),
+        { name: `${state.playerName} (You)`, wealth: myNetWorth, isMe: true, emoji: state.avatarEmoji }
+      ].sort((a, b) => b.wealth - a.wealth);
+
+      entries.forEach((entry, i) => {
+        const div = document.createElement('div');
+        div.className = `px-3 py-2 flex items-center justify-between text-xs ${entry.isMe ? 'bg-amber-500/15 font-bold text-amber-300' : 'text-slate-300'}`;
+        div.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-5 font-mono text-slate-400">#${i + 1}</span>
+            <span>${entry.emoji}</span>
+            <span>${entry.name}</span>
+          </div>
+          <span class="font-mono text-emerald-400">GH₵ ${entry.wealth.toLocaleString()}</span>
+        `;
+        lbList.appendChild(div);
+      });
+    }
+
+    function appendChatMessage(sender, text, isMe = false) {
+      const feed = document.getElementById('socialChatFeed');
+      if (!feed) return;
+      const line = document.createElement('div');
+      line.className = 'leading-snug';
+      line.innerHTML = `<strong class="${isMe ? 'text-amber-300' : 'text-emerald-400'}">${escapeHtml(sender)}:</strong> <span class="text-slate-200">${escapeHtml(text)}</span>`;
+      feed.appendChild(line);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function renderAllUI() {
+      renderHUD();
+      renderQuickLandmarkStrip();
+      renderCurrentLocationPanel();
+      renderCareersTab();
+      renderSkillsTab();
+      renderLifestyleTab();
+      renderBillboardsTab();
+      renderSocialTab();
+    }
+
+    function setupEventListeners() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.className = 'tab-btn py-2 px-1 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition flex flex-col items-center gap-0.5';
+          });
+          btn.className = 'tab-btn py-2 px-1 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 transition flex flex-col items-center gap-0.5';
+
+          document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+          const activePanel = document.getElementById(`tab-${target}`);
+          if (activePanel) activePanel.classList.remove('hidden');
+        });
+      });
+
+      function updateSpeedUI(spd) {
+        state.speed = spd;
+        const map = { 0: 'btnSpeedPause', 1: 'btnSpeed1x', 3: 'btnSpeed3x' };
+        Object.entries(map).forEach(([k, id]) => {
+          const el = document.getElementById(id);
+          if (Number(k) === spd) {
+            el.className = 'px-2 py-1 rounded-lg text-xs font-semibold bg-amber-500 text-slate-950 transition';
+          } else {
+            el.className = 'px-2 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition';
+          }
+        });
+      }
+      document.getElementById('btnSpeedPause').addEventListener('click', () => updateSpeedUI(0));
+      document.getElementById('btnSpeed1x').addEventListener('click', () => updateSpeedUI(1));
+      document.getElementById('btnSpeed3x').addEventListener('click', () => updateSpeedUI(3));
+
+      document.getElementById('btnRadioToggle').addEventListener('click', toggleRadioSound);
+      document.getElementById('selectRadioStation').addEventListener('change', (e) => {
+        radioStationIndex = Number(e.target.value) || 0;
+        if (!soundEnabled) {
+          toggleRadioSound();
+        } else {
+          startRadioLoop();
+          showToast(`Switched station to ${RADIO_STATIONS[radioStationIndex].name} 📻`, 'emerald');
+        }
+      });
+
+      document.querySelectorAll('.transport-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.transportMode = btn.getAttribute('data-transport');
+          playSfx('action');
+          renderHUD();
+        });
+      });
+
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const cx = (e.clientX - rect.left) / rect.width;
+        const cy = (e.clientY - rect.top) / rect.height;
+
+        for (const loc of LOCATIONS) {
+          if (Math.hypot(cx - loc.x, cy - loc.y) < 0.065) {
+            travelToLocation(loc.id);
+            return;
+          }
+        }
+        state.targetPos = { x: Math.max(0.05, Math.min(0.95, cx)), y: Math.max(0.08, Math.min(0.86, cy)) };
+        state.pendingLocationId = null;
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+          keysPressed[e.code] = true;
+        }
+      });
+      window.addEventListener('keyup', (e) => {
+        delete keysPressed[e.code];
+      });
+
+      ['dpadUp', 'dpadDown', 'dpadLeft', 'dpadRight'].forEach(id => {
+        const btn = document.getElementById(id);
+        const start = (ev) => { ev.preventDefault(); keysPressed[id] = true; };
+        const end = () => { delete keysPressed[id]; };
+        btn.addEventListener('mousedown', start);
+        btn.addEventListener('mouseup', end);
+        btn.addEventListener('mouseleave', end);
+        btn.addEventListener('touchstart', start, { passive: false });
+        btn.addEventListener('touchend', end);
+      });
+
+      document.getElementById('dpadCenter').addEventListener('click', () => {
+        let nearest = LOCATIONS[0];
+        let bestDist = 999;
+        LOCATIONS.forEach(loc => {
+          const d = Math.hypot(state.playerPos.x - loc.x, state.playerPos.y - loc.y);
+          if (d < bestDist) {
+            bestDist = d;
+            nearest = loc;
+          }
+        });
+        travelToLocation(nearest.id);
+      });
+
+      document.getElementById('btnQuickSnack').addEventListener('click', () => {
+        executeLocationAction({
+          name: 'Roadside Bofrot & Kalyppo',
+          icon: '🍩',
+          cost: 15,
+          timeMins: 15,
+          effects: { hunger: 26, energy: 8 },
+          msg: 'Hot Bofrot & Kalyppo sorted your hunger!'
+        });
+      });
+
+      document.getElementById('btnQuickRestroom').addEventListener('click', () => {
+        executeLocationAction({
+          name: 'Public Restroom Break',
+          icon: '🚽',
+          cost: 5,
+          timeMins: 10,
+          effects: { bladder: 70 },
+          msg: 'Used the public restroom (-GH₵ 5).'
+        });
+      });
+
+      document.getElementById('btnWorkShiftNow').addEventListener('click', () => {
+        executeLocationAction({
+          name: 'Work Career Shift',
+          icon: '💼',
+          isCareerWork: true,
+          timeMins: 180,
+          effects: { energy: -22, hunger: -15, bladder: -14 },
+          msg: 'Great shift at work!'
+        });
+      });
+
+      document.getElementById('btnRequestPromotion').addEventListener('click', () => {
+        const career = getCurrentCareer();
+        if (state.careerLevel >= 4) {
+          showToast('You are already at the top of this career ladder!', 'sky');
+          return;
+        }
+        const nextRole = career.levels[state.careerLevel + 1];
+        const userSkillLv = state.skills[career.reqSkill]?.level || 1;
+        if (state.careerXp < 100) {
+          playSfx('warn');
+          showToast(`Need 100 Career XP for promotion (currently ${state.careerXp}/100 XP). Work more shifts!`, 'rose');
+          return;
+        }
+        if (userSkillLv < nextRole.reqLv) {
+          playSfx('warn');
+          showToast(`Need ${career.reqSkill.toUpperCase()} Level ${nextRole.reqLv} to become ${nextRole.title}!`, 'rose');
+          return;
+        }
+        state.careerLevel += 1;
+        state.careerXp = 0;
+        playSfx('levelup');
+        addCanvasParticle(`Promoted: ${nextRole.title}!`, '#fbbf24');
+        showToast(`🎉 PROMOTED to ${nextRole.title}! New pay: GH₵ ${nextRole.pay}/shift!`, 'emerald');
+        saveState();
+        renderAllUI();
+      });
+
+      document.getElementById('btnPayRentEarly').addEventListener('click', () => {
+        const house = getCurrentHouse();
+        if (state.rentPaidThisWeek) {
+          showToast('Your rent for this week is already paid!', 'sky');
+          return;
+        }
+        if (state.cash < house.rent) {
+          playSfx('warn');
+          showToast(`Need GH₵ ${house.rent} to pay your weekly rent!`, 'rose');
+          return;
+        }
+        state.cash -= house.rent;
+        state.rentPaidThisWeek = true;
+        playSfx('cash');
+        showToast(`Paid GH₵ ${house.rent} rent early! Landlord is happy.`, 'emerald');
+        saveState();
+        renderAllUI();
+      });
+
+      document.getElementById('btnUpdateBillboardMsg').addEventListener('click', () => {
+        const val = document.getElementById('inputBillboardMsg').value.trim();
+        if (!val) return;
+        state.billboardMessage = val.toUpperCase();
+        playSfx('action');
+        showToast(`Billboard text updated to "${state.billboardMessage}"!`, 'emerald');
+        saveState();
+      });
+
+      document.getElementById('btnAskUrgent2k').addEventListener('click', () => {
+        const charismaLv = state.skills.charisma?.level || 1;
+        const chance = 0.45 + charismaLv * 0.08;
+        appendChatMessage(state.playerName, 'Chale, ECG & landlord dey show me pepper, who fit send urgent MoMo? 🙏', true);
+        if (Math.random() < chance) {
+          const donor = SIMULATED_PLAYERS[Math.floor(Math.random() * SIMULATED_PLAYERS.length)];
+          const gift = 40 + charismaLv * 25;
+          state.cash += gift;
+          playSfx('cash');
+          addCanvasParticle(`+GH₵ ${gift} MoMo`, '#10b981');
+          setTimeout(() => {
+            appendChatMessage(donor.name, `I got you @${state.playerName}! Check your MoMo wallet, sent GH₵ ${gift} 💚`, false);
+            showToast(`${donor.name} sent you GH₵ ${gift} MoMo!`, 'emerald');
+            saveState();
+            renderAllUI();
+          }, 500);
+        } else {
+          setTimeout(() => {
+            appendChatMessage('Alhaji_EastLegon', `Eii @${state.playerName}, go Makola or Digital Centre go hustle small 😂`, false);
+            showToast('Nobody sent MoMo this time — boost Charisma or try again later!', 'amber');
+          }, 500);
+        }
+      });
+
+      function submitLobbyChat() {
+        const input = document.getElementById('inputSocialChat');
+        const msg = input.value.trim();
+        if (!msg) return;
+        input.value = '';
+        appendChatMessage(state.playerName, msg, true);
+        state.meters.social = Math.min(100, state.meters.social + 8);
+        playSfx('action');
+        renderHUD();
+      }
+      document.getElementById('btnSendSocialChat').addEventListener('click', submitLobbyChat);
+      document.getElementById('inputSocialChat').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitLobbyChat();
+      });
+
+      document.getElementById('btnOpenCharModal').addEventListener('click', () => {
+        document.getElementById('inputSimName').value = state.playerName;
+        document.getElementById('charModal').classList.remove('hidden');
+      });
+      document.getElementById('btnCloseCharModal').addEventListener('click', () => {
+        document.getElementById('charModal').classList.add('hidden');
+      });
+      document.querySelectorAll('.avatar-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.avatar-opt').forEach(b => b.classList.remove('border-amber-400', 'border-2'));
+          btn.className = 'avatar-opt py-2 rounded-xl border-2 border-amber-400 bg-slate-800 text-center text-xs font-bold';
+          state.avatarColor = btn.getAttribute('data-color');
+          state.avatarEmoji = btn.getAttribute('data-emoji');
+        });
+      });
+      document.getElementById('btnSaveCharModal').addEventListener('click', () => {
+        const nameVal = document.getElementById('inputSimName').value.trim();
+        if (nameVal) state.playerName = nameVal;
+        document.getElementById('charModal').classList.add('hidden');
+        playSfx('action');
+        saveState();
+        renderAllUI();
+      });
+
+      document.getElementById('btnHowToPlay').addEventListener('click', () => {
+        document.getElementById('guideModal').classList.remove('hidden');
+      });
+      document.getElementById('btnCloseGuideModal').addEventListener('click', () => {
+        document.getElementById('guideModal').classList.add('hidden');
+      });
+      document.getElementById('btnConfirmGuideModal').addEventListener('click', () => {
+        document.getElementById('guideModal').classList.add('hidden');
+      });
+
+      document.getElementById('btnResetGame').addEventListener('click', () => {
+        document.getElementById('resetModal').classList.remove('hidden');
+      });
+      document.getElementById('btnCancelReset').addEventListener('click', () => {
+        document.getElementById('resetModal').classList.add('hidden');
+      });
+      document.getElementById('btnConfirmReset').addEventListener('click', () => {
+        state = getDefaultState();
+        saveState();
+        document.getElementById('resetModal').classList.add('hidden');
+        showToast('Fresh life started in Madina, Accra!', 'emerald');
+        renderAllUI();
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+    }
+
+    let animFrameId = null;
+    let simIntervalId = null;
+    let chatTickerIndex = 0;
+
+    function startLoops() {
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      function frame() {
+        updateCanvasSimulation();
+        drawAccraWorld();
+        animFrameId = requestAnimationFrame(frame);
+      }
+      animFrameId = requestAnimationFrame(frame);
+
+      if (simIntervalId) clearInterval(simIntervalId);
+      simIntervalId = setInterval(() => {
+        if (state.speed > 0 && !isPerformingAction) {
+          advanceMinutes(state.speed * 2);
+          renderHUD();
+        }
+        if (Math.random() < 0.16) {
+          const item = STREET_CHAT_LINES[chatTickerIndex % STREET_CHAT_LINES.length];
+          chatTickerIndex++;
+          appendChatMessage(item.user, item.text, false);
+        }
+      }, 1500);
+    }
+
+    function bootAccraLife() {
+      loadState();
+      setupEventListeners();
+      STREET_CHAT_LINES.slice(0, 4).forEach(item => appendChatMessage(item.user, item.text, false));
+      renderAllUI();
+      resizeCanvas();
+      startLoops();
+    }
+    if (document.readyState === 'complete') { bootAccraLife(); } else { window.addEventListener('load', bootAccraLife); }
+  </script>
+</body>
+</html>
